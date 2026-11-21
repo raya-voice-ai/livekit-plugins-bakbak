@@ -417,7 +417,7 @@ The segmenter is specified by `conformance/segmenter/reference.py` and tested by
   one code point per piece, and several random cuts);
 - measure lengths in Unicode code points, never UTF-16 units;
 - keep enough already-emitted text for look-behind when trimming the streaming
-  buffer (see `_keep_from` in the reference), or the invariant breaks after a
+  buffer (see `_lookbehind` in the reference), or the invariant breaks after a
   hard cut or before a list marker;
 - expose the options `min_chars` (20), `first_min_chars` (1), `max_chars` (400),
   `eager_first_clause` (false) and `first_clause_min_chars` (24), named in each

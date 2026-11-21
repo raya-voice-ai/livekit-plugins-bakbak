@@ -321,21 +321,34 @@ def _wrap_cut(text: str, start: int, max_chars: int) -> int:
     return cut if cut > start + 1 else window_end
 
 
-def _keep_from(text: str, gs: int) -> int:
-    """How much text before the group start a streaming segmenter must keep.
+# The longest word any rule compares (TITLES, AMBIGUOUS, list-marker digits) has
+# 6 code points, so 8 code points of a word are enough to know it is none of them.
+_LOOKBEHIND_WORD = 8
+
+
+def _lookbehind(text: str, gs: int) -> str:
+    """The text a streaming segmenter keeps before the group start.
 
     Two decisions look behind the group start: the word before a "." (which,
     after a hard cut, began before the group) and whether a list marker sits at
-    the start of a line. Keeping the word the group starts in, the spaces or tabs
-    before it and one more character gives both the answer they would have on the
-    whole text.
+    the start of a line. They need only the last few characters of that word and,
+    when the word is short, what precedes it: a run of spaces or tabs (one stands
+    for any number) and the character before the run, or nothing at the start of
+    the text. Keeping exactly that bounds the buffer however long the text is
+    and gives every decision the answer it would have on the whole text. The
+    kept text is never emitted, so it need not be a slice of the input.
     """
-    i = gs
-    while i > 0 and _is_word_char(text[i - 1]):
-        i -= 1
+    w = gs
+    while w > 0 and _is_word_char(text[w - 1]):
+        w -= 1
+    if gs - w >= _LOOKBEHIND_WORD:
+        return text[gs - _LOOKBEHIND_WORD : gs]
+    i = w
     while i > 0 and text[i - 1] in (" ", "\t"):
         i -= 1
-    return i - 1 if i > 0 else 0
+    gap = " " if i < w else ""
+    before = text[i - 1] if i > 0 else ""
+    return before + gap + text[w:gs]
 
 
 class Segmenter:
@@ -423,9 +436,13 @@ class Segmenter:
                 self._emit(out, _strip(text[gs:]))
                 gs = len(text)
             break
-        keep = _keep_from(text, gs) if self._trim else 0
-        self._buf = text[keep:]
-        self._gs = gs - keep
+        if self._trim:
+            context = _lookbehind(text, gs)
+            self._buf = context + text[gs:]
+            self._gs = len(context)
+        else:
+            self._buf = text
+            self._gs = gs
         return out
 
 
