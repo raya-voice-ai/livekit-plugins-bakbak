@@ -37,7 +37,7 @@ import random
 import re
 import time
 from collections import deque
-from collections.abc import AsyncIterator, Awaitable, Callable, Mapping
+from collections.abc import AsyncIterator, Awaitable, Callable, Iterable, Mapping
 from dataclasses import dataclass
 from typing import Any
 
@@ -80,7 +80,7 @@ def backoff(retry: int) -> float:
 class WSRequest:
     """One request on a context: its outcome is one of the events below."""
 
-    __slots__ = ("audio_bytes", "drained", "message", "request_id", "seq")
+    __slots__ = ("abandoned", "audio_bytes", "drained", "message", "request_id", "seq")
 
     def __init__(self, message: str, seq: int) -> None:
         self.message = message  # the JSON text sent, kept for resending
@@ -88,6 +88,9 @@ class WSRequest:
         self.request_id: str | None = None
         self.audio_bytes = 0
         self.drained = False  # already refused once by a draining server
+        # Failed on our side (bad audio) while the server still streams it: its
+        # remaining messages are dropped until its terminal one.
+        self.abandoned = False
 
 
 @dataclass(slots=True)
@@ -497,6 +500,11 @@ class WSClient:
         self.changed.fire()
 
 
+def _live(requests: Iterable[WSRequest]) -> list[WSRequest]:
+    """The requests that have no outcome yet (an abandoned one already failed)."""
+    return [r for r in requests if not r.abandoned]
+
+
 def _consume_exception(task: asyncio.Task[Any]) -> None:
     if not task.cancelled():
         task.exception()
@@ -580,7 +588,7 @@ class WSContext:
         self._pending.clear()
         if self._in_flight and self._socket is not None:
             future: asyncio.Future[None] = asyncio.get_running_loop().create_future()
-            requests = [*self._in_flight, *dropped]
+            requests = [*_live(self._in_flight), *dropped]
             self._cancels.append(_Cancel(future, requests, len(self._in_flight)))
             self._in_flight.clear()
             self._socket.send(json.dumps({"context_id": self.context_id, "cancel": True}))
@@ -691,6 +699,12 @@ class WSContext:
         if not self._in_flight:
             return  # nothing is waiting for this message
         request = self._in_flight[0]
+        if request.abandoned:
+            if kind in ("done", "error"):  # its end: the next message is the next request's
+                self._in_flight.popleft()
+                sock.unfinished -= 1
+                self._after_answer()
+            return
         if request.request_id is None:
             request_id = msg.get("request_id")
             if isinstance(request_id, str):
@@ -698,7 +712,19 @@ class WSContext:
         if kind == "chunk":
             data = msg.get("data")
             if isinstance(data, str) and data:
-                audio = base64.b64decode(data)
+                try:
+                    audio = base64.b64decode(data)
+                except ValueError:
+                    # The stream broke at this point: this request fails, nothing else
+                    # does, and the connection stays (BEHAVIOR.md §6.4).
+                    request.abandoned = True
+                    error = _errors.interrupted(
+                        "The server sent audio that is not valid base64.",
+                        request_id=request.request_id,
+                        audio_delivered=request.audio_bytes > 0,
+                    )
+                    self._emit(WSFailed(request, error))
+                    return
                 request.audio_bytes += len(audio)
                 self._emit(WSAudio(request, audio))
         elif kind == "done":
@@ -761,7 +787,7 @@ class WSContext:
                 cancel.future.set_result(None)
         resend: list[WSRequest] = []
         in_flight, self._in_flight = self._in_flight, deque()
-        for request in in_flight:
+        for request in _live(in_flight):
             if fatal is not None:
                 self._emit(WSFailed(request, fatal))
             elif request.audio_bytes:
@@ -843,7 +869,7 @@ class WSContext:
                 self._emit(WSCancelled(request))
             if not cancel.future.done():
                 cancel.future.set_result(None)
-        for request in [*self._in_flight, *self._held, *self._pending]:
+        for request in [*_live(self._in_flight), *self._held, *self._pending]:
             error = APITimeoutError(
                 f"No answer from the Bakbak API for {self.timeout:g} s.",
                 retryable=request.audio_bytes == 0,
@@ -881,7 +907,7 @@ class WSContext:
             if not cancel.future.done():
                 cancel.future.set_result(None)
         self._cancels.clear()
-        for request in [*self._in_flight, *self._held, *self._pending]:
+        for request in [*_live(self._in_flight), *self._held, *self._pending]:
             self._emit(WSFailed(request, error))
         self._in_flight.clear()
         self._held.clear()

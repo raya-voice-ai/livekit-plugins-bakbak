@@ -166,3 +166,34 @@ def test_backoff_follows_the_spec() -> None:
         for _ in range(50):
             assert low <= _ws.backoff(retry) <= high
     assert _ws.backoff(10) <= 8.0
+
+
+async def test_malformed_audio_fails_only_its_own_request(session: aiohttp.ClientSession) -> None:
+    """The server goes on streaming the failed request; none of that may reach the
+    next request on the context, and the connection stays open."""
+    fake = FakeBakbak(lambda r: Plan(bad_chunk_at=1) if r.index == 1 else Plan())
+    base = await fake.start()
+    client = _ws.WSClient(
+        url=_ws_url(base), headers={"X-API-Key": "test-key"}, session=lambda: session
+    )
+    ctx = client.context("c1", timeout=5)
+    body = {"voice_id": "v", "language": "hi"}
+    first = ctx.send({**body, "text": "पहला वाक्य।"})
+    second = ctx.send({**body, "text": "दूसरा वाक्य।"})
+    ctx.end_input()
+    events = [ev async for ev in ctx.events()]
+    await client.aclose()
+    await fake.stop()
+    failed = [ev for ev in events if isinstance(ev, _ws.WSFailed)]
+    assert [ev.request for ev in failed] == [first]
+    assert isinstance(failed[0].error, APIStatusError)
+    assert failed[0].error.status_code == -1  # after audio: never retried
+    audio = [ev for ev in events if isinstance(ev, _ws.WSAudio)]
+    assert [ev.request for ev in audio].count(first) == 1  # only the chunk before the bad one
+    assert (
+        b"".join(ev.data for ev in audio if ev.request is second)
+        == FakeBakbak.chunk(fake.received[1]) * 5
+    )
+    assert isinstance(events[-1], _ws.WSDone)
+    assert events[-1].request is second
+    assert fake.ws_connections == 1

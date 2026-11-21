@@ -868,3 +868,36 @@ async def test_closing_does_not_wait_for_a_silent_peer(session: aiohttp.ClientSe
     await tts.aclose()
     assert time.monotonic() - started < 1.5
     await runner.cleanup()
+
+
+@pytest.mark.parametrize("transport", TRANSPORTS)
+async def test_malformed_audio_before_any_audio_is_retried(
+    fake: FakeBakbak, session: aiohttp.ClientSession, transport: str
+) -> None:
+    """Invalid base64 fails its request as a retryable connection failure (review r6):
+    no raw binascii.Error, and on the WebSocket the connection stays."""
+    fake.plan = lambda r: Plan(bad_chunk_at=0) if r.index == 1 else Plan()
+    tts = make_tts(fake, session, transport=transport)
+    errors = collect(tts, "error")
+    events = await run_stream(tts, ["नमस्ते, आप कैसे हैं?"])
+    assert events[-1].is_final
+    assert [(type(e.error), e.recoverable) for e in errors] == [(APIConnectionError, True)]
+    if transport == "websocket":
+        assert fake.ws_connections == 1
+        assert len(fake.sockets) == 1
+    await tts.aclose()
+
+
+@pytest.mark.parametrize("transport", TRANSPORTS)
+async def test_malformed_audio_after_audio_is_not_retried(
+    fake: FakeBakbak, session: aiohttp.ClientSession, transport: str
+) -> None:
+    fake.plan = lambda _: Plan(bad_chunk_at=2)
+    tts = make_tts(fake, session, transport=transport)
+    with pytest.raises(APIStatusError) as caught:
+        await run_stream(tts, ["नमस्ते, आप कैसे हैं?"])
+    assert caught.value.status_code == -1
+    assert caught.value.retryable is False
+    assert caught.value.request_id == "req_1"
+    assert len(fake.received) == 1
+    await tts.aclose()

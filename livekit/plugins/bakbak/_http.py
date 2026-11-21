@@ -134,7 +134,15 @@ def _on_event(payload: str, result: SSEResult, on_audio: AudioSink) -> bool:
     if kind == "chunk":
         data = event.get("data")
         if isinstance(data, str) and data:
-            audio = base64.b64decode(data)
+            try:
+                audio = base64.b64decode(data)
+            except ValueError:
+                # The stream broke at this point (BEHAVIOR.md §6.4), never a raw error.
+                raise _errors.interrupted(
+                    "The server sent audio that is not valid base64.",
+                    request_id=result.request_id,
+                    audio_delivered=result.audio_bytes > 0,
+                ) from None
             result.audio_bytes += len(audio)
             result.chunks += 1
             on_audio(audio)

@@ -32,6 +32,7 @@ class Plan:
     close_after: tuple[int, int] | None = None  # (chunks, close code); WebSocket only
     hang_after: int | None = None  # chunks before going silent for good
     chunk_delay: float = 0.0
+    bad_chunk_at: int | None = None  # this chunk's data is not valid base64
     first_delay: float = 0.0  # before the first chunk
 
 
@@ -143,7 +144,9 @@ class FakeBakbak:
                 event = _stream_interrupted(request_id)
                 await resp.write(f"event: error\ndata: {json.dumps(event)}\n\n".encode())
                 return resp
-            data = base64.b64encode(self.chunk(received)).decode()
+            data = (
+                "abc" if plan.bad_chunk_at == i else base64.b64encode(self.chunk(received)).decode()
+            )
             event = {"type": "chunk", "status_code": 206, "done": False, "data": data}
             await resp.write(f"event: chunk\ndata: {json.dumps(event)}\n\n".encode())
             await asyncio.sleep(plan.chunk_delay)
@@ -249,7 +252,11 @@ class _Context:
             if plan.fail_after == i:
                 await self._send(_stream_interrupted(request_id))
                 return
-            data = base64.b64encode(self.fake.chunk(received)).decode()
+            data = (
+                "abc"  # not valid base64
+                if plan.bad_chunk_at == i
+                else base64.b64encode(self.fake.chunk(received)).decode()
+            )
             await self._send(
                 {
                     "type": "chunk",
