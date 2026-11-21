@@ -9,6 +9,7 @@ look-ahead, and the rule that audio is never replayed.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import time
 from collections.abc import AsyncIterator, Callable
@@ -725,3 +726,74 @@ async def test_notices_are_logged(
     await run_stream(tts, [TEXT])  # the socket is unaffected
     await tts.aclose()
     assert fake.ws_connections == 1
+
+
+# -- cleanup under cancellation (review r10, r2) ------------------------------
+
+NO_CREDITS = (
+    402,
+    {"message": "Insufficient credits.", "error_code": "insufficient_credits", "retryable": False},
+)
+
+
+@pytest.mark.parametrize("delay", range(8))
+async def test_interruption_while_an_error_is_handled_still_cancels(
+    fake: FakeBakbak,
+    session: aiohttp.ClientSession,
+    monkeypatch: pytest.MonkeyPatch,
+    delay: int,
+) -> None:
+    """The user barges in `delay` loop iterations after sentence 2 was refused,
+    while sentence 3 is streaming: the cancel must still be sent."""
+
+    def plan(r: Received) -> Plan:
+        if r.index == 2:
+            return Plan(refuse=NO_CREDITS)
+        return Plan(chunks=300, chunk_delay=0.005) if r.index == 3 else Plan(chunks=3)
+
+    fake.plan = plan
+    tts = make_tts(fake, session)
+    stream = tts.stream(conn_options=APIConnectOptions(max_retry=0, timeout=2))
+    emit = _ws.WSContext._emit
+    interruptions: list[asyncio.Future[None]] = []
+
+    def emit_then_interrupt(ctx: _ws.WSContext, event: _ws.WSEvent) -> None:
+        emit(ctx, event)
+        if isinstance(event, _ws.WSFailed):
+
+            async def interrupt() -> None:
+                for _ in range(delay):
+                    await asyncio.sleep(0)
+                await stream.aclose()
+
+            interruptions.append(asyncio.ensure_future(interrupt()))
+
+    monkeypatch.setattr(_ws.WSContext, "_emit", emit_then_interrupt)
+    stream.push_text(TEXT + " फिर")  # no end_input: the LLM is still writing
+    with contextlib.suppress(APIStatusError):
+        async for _ in stream:
+            pass
+    await asyncio.gather(*interruptions)
+    await until(lambda: len(fake.cancels()) == 1)
+    await until(lambda: not tts._ws._contexts)
+    await tts.aclose()
+
+
+@pytest.mark.parametrize("delay", range(6))
+async def test_a_second_cancellation_during_cleanup_still_cancels(
+    fake: FakeBakbak, session: aiohttp.ClientSession, delay: int
+) -> None:
+    fake.plan = lambda _: Plan(chunks=200, chunk_delay=0.01)
+    tts = make_tts(fake, session, text_pacing=True)
+    stream = tts.stream(conn_options=FAST)
+    stream.push_text(TEXT)
+    stream.end_input()
+    await stream.__anext__()
+    closing = asyncio.ensure_future(stream.aclose())  # e.g. the agent's interruption
+    for _ in range(delay):
+        await asyncio.sleep(0)
+    stream._task.cancel()  # e.g. a second aclose() from a session shutdown
+    await closing
+    await until(lambda: len(fake.cancels()) == 1)
+    await until(lambda: not tts._ws._contexts)
+    await tts.aclose()

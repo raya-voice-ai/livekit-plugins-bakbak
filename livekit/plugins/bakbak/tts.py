@@ -378,8 +378,13 @@ class SynthesizeStream(tts.SynthesizeStream):
             await attempt.run(sentences(), context_id=context_id)
             await input_task
         finally:
-            await utils.aio.gracefully_cancel(input_task)
-            await sent_stream.aclose()
+            input_task.cancel()
+            try:
+                await utils.aio.gracefully_cancel(input_task)
+            finally:
+                # Also when a second cancellation interrupts the wait above: a pacer
+                # runs tasks of its own that only aclose() stops.
+                await sent_stream.aclose()
 
         if not attempt.sent_any and has_speech:
             output_emitter.push(_silence(self._opts.sample_rate))
@@ -466,10 +471,14 @@ class _Attempt:
         try:
             await asyncio.gather(*tasks)
         finally:
-            await utils.aio.gracefully_cancel(*tasks)
-            # Stops whatever the server is still doing for this attempt (an
-            # interruption, an error) and drops its late audio; the socket stays.
+            # Stop whatever the server is still doing for this attempt (an
+            # interruption, an error) and drop its late audio; the socket stays.
+            # Done before the first await: a second cancellation (barge-in while an
+            # error is handled) interrupts the await, and must not skip the cancel.
+            for task in tasks:
+                task.cancel()
             ctx.close()
+            await utils.aio.gracefully_cancel(*tasks)
 
     async def _run_http(self, sentences: AsyncIterable[str]) -> None:
         url = f"{self._opts.base_url}{_http.STREAM_PATH}"
