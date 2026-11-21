@@ -36,6 +36,7 @@ import json
 import random
 import re
 import time
+import weakref
 from collections import deque
 from collections.abc import AsyncIterator, Awaitable, Callable, Iterable, Mapping
 from dataclasses import dataclass
@@ -202,7 +203,10 @@ class WSClient:
         self._connect_timeout = connect_timeout
         self._socket: _Socket | None = None  # where new contexts start
         self._sockets: set[_Socket] = set()  # every open socket, old ones included
+        # Contexts with something unfinished, by id: where messages are routed. An
+        # idle context leaves it and comes back with its next request (§6.6).
         self._contexts: dict[str, WSContext] = {}
+        self._all: weakref.WeakSet[WSContext] = weakref.WeakSet()  # for aclose()
         self._opening: asyncio.Task[_Socket] | None = None
         self._background: set[asyncio.Task[Any]] = set()
         # Consecutive abnormal closes (with requests to resend) and failed
@@ -220,10 +224,10 @@ class WSClient:
         """A new context. `timeout` bounds the connect and the wait for each message."""
         if not _CONTEXT_ID.fullmatch(context_id):
             raise ValueError("context_id must be 1-128 characters of A-Z a-z 0-9 . _ -")
-        if context_id in self._contexts:
+        if any(c.context_id == context_id and not c._closed for c in self._all):
             raise ValueError(f"context {context_id!r} is already in use")
         ctx = WSContext(self, context_id, timeout=timeout)
-        self._contexts[context_id] = ctx
+        self._all.add(ctx)
         return ctx
 
     async def connect(self, timeout: float) -> tuple[float, bool]:
@@ -244,7 +248,7 @@ class WSClient:
         if self._closed:
             return
         self._closed = True
-        for ctx in list(self._contexts.values()):
+        for ctx in list(self._all):
             ctx._abort(APIConnectionError("The TTS was closed.", retryable=False))
         if self._opening is not None:
             self._opening.cancel()
@@ -554,6 +558,8 @@ class WSContext:
         """Queue one request (a request body without ``context_id``)."""
         if self._closed or self._input_ended:
             raise RuntimeError("the context no longer accepts requests")
+        if self._client._contexts.setdefault(self.context_id, self) is not self:
+            raise ValueError(f"context {self.context_id!r} is already in use")
         message = json.dumps(
             {**body, "context_id": self.context_id}, ensure_ascii=False, separators=(",", ":")
         )
@@ -616,7 +622,7 @@ class WSContext:
         self._events.close()
         if self._pump is not None:
             self._pump.cancel()
-        self._maybe_unregister()
+        self._maybe_finish()
 
     @property
     def unfinished(self) -> bool:
@@ -813,7 +819,7 @@ class WSContext:
         self._disarm_timer()
         if self._closed:
             self._pending.clear()
-            self._maybe_unregister()
+            self._maybe_finish()
             return False
         if self._pending:
             self._dispatch()
@@ -830,7 +836,6 @@ class WSContext:
             # Nothing will be sent on it again: close it rather than wait for the
             # server (BEHAVIOR.md §6.4).
             self._client._spawn(self._client._close_socket(sock))
-        self._maybe_unregister()
 
     # -- timeout ------------------------------------------------------------
 
@@ -893,12 +898,14 @@ class WSContext:
             self._events.send_nowait(event)
 
     def _maybe_finish(self) -> None:
-        if self._input_ended and not self.unfinished:
+        """Once nothing is unfinished: end `events()` after `end_input()`, and leave the
+        routing table, since no message can arrive for it (BEHAVIOR.md §6.6)."""
+        if self.unfinished:
+            return
+        if self._input_ended:
             self._events.close()
-
-    def _maybe_unregister(self) -> None:
         contexts = self._client._contexts
-        if self._closed and self._socket is None and contexts.get(self.context_id) is self:
+        if contexts.get(self.context_id) is self:
             del contexts[self.context_id]
 
     def _abort(self, error: APIError) -> None:

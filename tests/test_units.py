@@ -155,9 +155,11 @@ async def test_context_ids_are_validated() -> None:
         client.context("has space", timeout=1)
     with pytest.raises(ValueError, match="context_id"):
         client.context("x" * 129, timeout=1)
-    client.context("ok.id-1_2", timeout=1)
+    first = client.context("ok.id-1_2", timeout=1)
     with pytest.raises(ValueError, match="already in use"):
         client.context("ok.id-1_2", timeout=1)
+    first.close()
+    client.context("ok.id-1_2", timeout=1)  # a closed context's id is free again
     await client.aclose()
 
 
@@ -197,3 +199,57 @@ async def test_malformed_audio_fails_only_its_own_request(session: aiohttp.Clien
     assert isinstance(events[-1], _ws.WSDone)
     assert events[-1].request is second
     assert fake.ws_connections == 1
+
+
+async def test_cancel_drops_unread_audio_of_finished_requests_too(
+    session: aiohttp.ClientSession,
+) -> None:
+    """BEHAVIOR.md §6.3: a cancel means silence now, whatever the audio belonged to."""
+    fake = FakeBakbak()
+    base = await fake.start()
+    client = _ws.WSClient(
+        url=_ws_url(base), headers={"X-API-Key": "test-key"}, session=lambda: session
+    )
+    ctx = client.context("c1", timeout=5)
+    body = {"voice_id": "v", "language": "hi"}
+    first = ctx.send({**body, "text": "पहला वाक्य।"})
+    second = ctx.send({**body, "text": "दूसरा वाक्य।"})
+
+    async def answered() -> None:
+        while ctx.unfinished:  # noqa: ASYNC110 - waits on the transport's state
+            await asyncio.sleep(0.01)
+
+    await asyncio.wait_for(answered(), 5)  # both done; nothing taken from events() yet
+    await asyncio.wait_for(ctx.cancel(), 1)  # nothing unfinished: resolves at once
+    ctx.end_input()
+    events = [ev async for ev in ctx.events()]
+    await client.aclose()
+    await fake.stop()
+    assert events == [_ws.WSDone(first), _ws.WSDone(second)]
+    assert fake.cancels() == []
+
+
+async def test_idle_contexts_are_released(session: aiohttp.ClientSession) -> None:
+    """BEHAVIOR.md §6.6: the routing table holds only contexts with work in progress."""
+    fake = FakeBakbak()
+    base = await fake.start()
+    client = _ws.WSClient(
+        url=_ws_url(base), headers={"X-API-Key": "test-key"}, session=lambda: session
+    )
+    body = {"voice_id": "v", "language": "hi", "text": "वाक्य।"}
+    reused = client.context("reused", timeout=5)
+    for turn in range(50):
+        ctx = client.context(f"turn-{turn}", timeout=5)
+        ctx.send(body)
+        ctx.end_input()
+        assert [type(ev) async for ev in ctx.events()] == [_ws.WSAudio] * 5 + [_ws.WSDone]
+        assert client._contexts == {}
+        # A context that went idle is routed again as soon as it sends.
+        reused.send(body)
+        assert list(client._contexts) == ["reused"]
+        events = reused.events()
+        for _ in range(6):
+            await anext(events)
+        assert client._contexts == {}
+    await client.aclose()
+    await fake.stop()
