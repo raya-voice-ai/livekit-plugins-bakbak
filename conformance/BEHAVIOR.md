@@ -1,7 +1,8 @@
 # Bakbak client behaviour specification (version 1)
 
 This document is the contract every official Bakbak text-to-speech client follows:
-the Python SDK (`bakbak` on PyPI), the JavaScript SDK (`bakbak` on npm), the MCP
+the Python SDK (`bakbak-python` on PyPI, imported as `bakbak`), the JavaScript SDK
+(`bakbak` on npm), the MCP
 server (`bakbak-mcp`), and the LiveKit Agents plugin (`livekit-plugins-bakbak`).
 It is copied byte for byte into each repository under `conformance/`, next to the
 fixtures that test it. Change it in one place, sync it, and update every client.
