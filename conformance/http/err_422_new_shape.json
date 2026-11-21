@@ -1,0 +1,75 @@
+{
+ "id": "err_422_new_shape",
+ "description": "error_code, message, retryable and request_id in the body.",
+ "call": {
+  "method": "generate",
+  "params": {
+   "text": "नमस्ते, आप कैसे हैं?",
+   "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+   "model": "m1",
+   "language": "hi",
+   "output_format": {
+    "container": "raw",
+    "encoding": "pcm_mulaw",
+    "sample_rate": 8000
+   }
+  }
+ },
+ "exchanges": [
+  {
+   "expect_request": {
+    "method": "POST",
+    "path": "/v1/text-to-speech",
+    "headers": {
+     "x-api-key": "test-key",
+     "content-type": "application/json"
+    },
+    "json": {
+     "text": "नमस्ते, आप कैसे हैं?",
+     "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+     "model": "m1",
+     "language": "hi",
+     "output_format": {
+      "container": "raw",
+      "encoding": "pcm_mulaw",
+      "sample_rate": 8000
+     }
+    }
+   },
+   "response": {
+    "status": 422,
+    "headers": {
+     "content-type": "application/json",
+     "x-request-id": "req_0071415897e5d4ac1c0f8576c827a723"
+    },
+    "json": {
+     "detail": [
+      {
+       "type": "missing",
+       "loc": [
+        "body",
+        "voice_id"
+       ],
+       "msg": "Field required"
+      }
+     ],
+     "error_code": "invalid_request",
+     "message": "Invalid request: voice_id: Field required.",
+     "retryable": false,
+     "request_id": "req_0071415897e5d4ac1c0f8576c827a723"
+    }
+   }
+  }
+ ],
+ "expect": {
+  "error": {
+   "class": "UnprocessableEntityError",
+   "status": 422,
+   "error_code": "invalid_request",
+   "retryable": false,
+   "request_id": "req_0071415897e5d4ac1c0f8576c827a723",
+   "message": "Invalid request: voice_id: Field required."
+  },
+  "sleeps": []
+ }
+}

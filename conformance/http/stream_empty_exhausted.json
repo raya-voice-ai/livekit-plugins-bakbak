@@ -1,0 +1,127 @@
+{
+ "id": "stream_empty_exhausted",
+ "description": "Empty streams on every attempt end as StreamInterruptedError with no audio.",
+ "call": {
+  "method": "stream",
+  "params": {
+   "text": "नमस्ते, आप कैसे हैं?",
+   "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+   "model": "m1",
+   "language": "hi",
+   "output_format": {
+    "container": "raw",
+    "encoding": "pcm_mulaw",
+    "sample_rate": 8000
+   }
+  }
+ },
+ "exchanges": [
+  {
+   "expect_request": {
+    "method": "POST",
+    "path": "/v1/text-to-speech/stream",
+    "headers": {
+     "x-api-key": "test-key",
+     "content-type": "application/json"
+    },
+    "json": {
+     "text": "नमस्ते, आप कैसे हैं?",
+     "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+     "model": "m1",
+     "language": "hi",
+     "output_format": {
+      "container": "raw",
+      "encoding": "pcm_mulaw",
+      "sample_rate": 8000
+     }
+    }
+   },
+   "response": {
+    "status": 200,
+    "headers": {
+     "content-type": "text/event-stream; charset=utf-8",
+     "x-request-id": "req_empty"
+    },
+    "sse": ""
+   }
+  },
+  {
+   "expect_request": {
+    "method": "POST",
+    "path": "/v1/text-to-speech/stream",
+    "headers": {
+     "x-api-key": "test-key",
+     "content-type": "application/json"
+    },
+    "json": {
+     "text": "नमस्ते, आप कैसे हैं?",
+     "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+     "model": "m1",
+     "language": "hi",
+     "output_format": {
+      "container": "raw",
+      "encoding": "pcm_mulaw",
+      "sample_rate": 8000
+     }
+    }
+   },
+   "response": {
+    "status": 200,
+    "headers": {
+     "content-type": "text/event-stream; charset=utf-8",
+     "x-request-id": "req_empty"
+    },
+    "sse": ""
+   }
+  },
+  {
+   "expect_request": {
+    "method": "POST",
+    "path": "/v1/text-to-speech/stream",
+    "headers": {
+     "x-api-key": "test-key",
+     "content-type": "application/json"
+    },
+    "json": {
+     "text": "नमस्ते, आप कैसे हैं?",
+     "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+     "model": "m1",
+     "language": "hi",
+     "output_format": {
+      "container": "raw",
+      "encoding": "pcm_mulaw",
+      "sample_rate": 8000
+     }
+    }
+   },
+   "response": {
+    "status": 200,
+    "headers": {
+     "content-type": "text/event-stream; charset=utf-8",
+     "x-request-id": "req_empty"
+    },
+    "sse": ""
+   }
+  }
+ ],
+ "expect": {
+  "error": {
+   "class": "StreamInterruptedError",
+   "status": null,
+   "error_code": null,
+   "retryable": true,
+   "request_id": "req_empty",
+   "audio_bytes": 0
+  },
+  "sleeps": [
+   [
+    0.375,
+    0.5
+   ],
+   [
+    0.75,
+    1.0
+   ]
+  ]
+ }
+}

@@ -1,0 +1,194 @@
+{
+ "id": "ws_capacity_503_not_retried_when_queued",
+ "description": "The same refusal is not resent when a later request is queued on the context: order would break.",
+ "connections": [
+  {
+   "script": [
+    {
+     "recv": {
+      "text": "दूसरा वाक्य।",
+      "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+      "model": "m1",
+      "language": "hi",
+      "output_format": {
+       "container": "raw",
+       "encoding": "pcm_mulaw",
+       "sample_rate": 8000
+      },
+      "context_id": "b"
+     }
+    },
+    {
+     "recv": {
+      "text": "तीसरा वाक्य।",
+      "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+      "model": "m1",
+      "language": "hi",
+      "output_format": {
+       "container": "raw",
+       "encoding": "pcm_mulaw",
+       "sample_rate": 8000
+      },
+      "context_id": "b"
+     }
+    },
+    {
+     "send": {
+      "type": "error",
+      "status_code": 503,
+      "done": true,
+      "message": "No serving capacity is currently available.",
+      "context_id": "b",
+      "request_id": "req_803eb263432b70ea339251c2981a1633"
+     }
+    },
+    {
+     "send": {
+      "type": "chunk",
+      "status_code": 206,
+      "done": false,
+      "data": "/fv7+/z7/Pz8+/v7/P39/f39/v37/Pz8+/z9/Pv6+/v8/P39/v7+//7/fn7///7+fv/+fv/+/358fn17fHx7fX59/359///9//99ff7+//7+/vz8/f34+vj7+/z7/Pf5+fby8fTx9O3x9X3z6+PT22pPSNPNeNL2aMK4xdXp3cZo4b5eStnI1NW7x+++wvLNv9Zw1NpteOHYfenL69/O2NLd29Xj29jf5vnj+l7rclRn6V9a2W9b529hbW12a21qdX1Q+OdOYulQTvhXRVtQQUhBPTw6Ozs8P0NGVmduzsvJvb28trm7uLvEwM5neTwzMCQiIBsbHBkdHyAtOUy/r6qinp2cnJ2foaeutsLgSkU6Iy0gFx8WEhkUEh0cHz5XxKOem5SVlZSXnJ2jr7K/+25hPSk2IxoiFxIaFBIdGh49QMajoJuUlpSTl5qbo6mrvsjOTUhJMC8qHxoeFxIeExctHjOv3aKXn5WSmpSWoZyftKqzY71xOF0zKS0fGB8VEh8SGisdS7rNnpuelJWalJmhm6awqMHOvUpOSi8uKR4aHhUUHhIdKh5fvsqenp6VmZuWnaGcr6qs0bjMTeg8MjElHxsdFRcbFB8mI93Iu56fnZabmpign6CvqrLIu9lUZjsyMCYeHB0VGRsVIyUozc2ynqObmJ2amqOfo7Wpuc+0WV3eMDsuIh8cGxUaGRcmIy7F0aqeopmanZmdpJ6rsqvGxL1J+VIvPigiHhsaFRsXGigjPcHCo5+fl5ubmZ+joay0rc/Lvz9bSC03Jx8dGxgVHBYcKSNfvbuenp2VnJqYpKCjuK264sJnRlM3MC8jHxscFxYcFiAqKsS4rZudmpWbmZujoqm3tcFw2Vc9STYuLiMcHxkVHRYZKCE7uMGgm56Vl5uXnaSisLu87FxfQEE9NTArIB4eFhgbFR8nJsu4sJqcmpOampmkpqrCw9BKVUw+Rz40MyoeIhsVHhcYKiQ3sruimZ6WlpyZnqmottPSYkFPST1JPjEyJB4hGBgdFx4sKtyurZyZm5aYnJ2jrLfFb05LQEZLRUZANi4jIR8YGx0ZJTAzuamnmpmamJqeo6m5z+xGPkNBR05QTkQ7LyQiHxkbHhslOD66pqGcmZmanJ+pr75jST47PT9MVVtgTj80JyAhGxofHiM4Wb6on5ybmZqeoam2yltGOjc+P0dx6P52VT0wJh8fHBwgJCs/0LKnn5ycnJ2hqbC97Uo/PDs+SVvp08/Xb0w8LSUiIB8fJSs2WMGup6Gfn6Ckqq+8zlRCRT08R0xSbvP5ZllKOzYxKykqKy0uOEpe0ryzsrCur7a4uMPV1uReXGVqT15wUVpYTkVESUM+REM7PkVKRUxk9Gf2097dzcbO1MnJ2tvW62Z6c11eZVxPXGRXWmpeWl9rVVdwYlpcbXRdZPZ8eOjd9v3t4nXv4OVwc9rnbnPk7mhv2vBkeufzY+vfbHjr3O1t3uJmbeF7cn7c7mjo5vft3d179dzi7u3d/vXs6+zt2t7o4OTo6ePY5/Db3/zr3d3v7Nnk79/f5us=",
+      "step_time": 0.012755810050293803,
+      "context_id": "b",
+      "request_id": "req_02f27c33ee130be1be7e02ec4b542fdd"
+     }
+    },
+    {
+     "send": {
+      "type": "chunk",
+      "status_code": 206,
+      "done": false,
+      "data": "5OHn6N7g8uPp4ebn3evo7eHf4Ofh5+7i6uHv4eH85+Lx7+Dt7eTi4O/p5OTy4d/59enZ7u7f6/fq3uTt4dzpfe3d5e/o3O595t3s+uDp6+/f7n3j7Ozn3Oj0fujo/OPh6fjr3/l15eTp9Ojm8uzu8ubo//L+8+px7ujk9e/n+/Tq23Xq5Gp5cOnqdOLvbXl76uV1fuf+au3jamp24HBv3+poeeTpfmzpevv9e2/36fz96PltcfnmbWr192lr5/B3/nT9Z331cHDt9nVrcO5r6nr3fWt4efhm9utuYHJobexvbn1nevdq8HJjZG3tbefhbWts5HNr5fNtY3lu7m1l6nn3+eFsbPttbuJ4eeVvbH7acfBm9F1l6+n2WObk4nbhcl/s6mR9419aZN/4afJ97WJh4W5v7OjhXVffcmjxanB06nnv3l57b/J7WuHiblB29Fhv2W1cXO76W9vm7V1oZlx3fF1061fy7vdgWtlxT/l+X2ng5U5t6XlxWuhfTXLf9VBtelBq9thqVt56VGjb/FhXamtmZ2ZyV2Jn7dJg9tlTTVHrakvv6lpa1dFhWNtuTFlcflpZ9eJlWtteUPzkeE5d4FxQbOFpT+7lW1vueVNO7+tVaubyWWHu/VFp429lW37kXl7e521eYPhoU235amNb3+9bb2zjZFjd21xo1eVfeNzdZ1nc129b8dr4XOvXcF9j7O1RY+RmWVdhYlZX7Ov13MzMxL++vL+/xMzR5l9dSEA7Ojo0NDUxLjxIVN7KtrKwq6urrLCwtb3DytPYd2v7SkM8NzcuLSYrODY7VMW7urCpq62vr7O+ysLL3dzSxdTVyszjbFtZQDk7OjEwPkBDSmXMzMu+u7q+v7q+w8TFxMrPx8zZzdrd411lTURIPT84Mj8+PERN8eHwxr6/vb67vMG/wMTGzMbI1M3P4eRSV0xCPTs0Lzk2ODtDXH3qwL27ubq2usC8v8bHzsLH0cvK2+1UXEQ5NTMoKDErMDRK3dnArq+xtLWyxcy/wcjFvbPB0cbLfD89PisfHRcfLClFv6ijq6Sisr7l1NpHz7e2ra2srLq7xUQ4LCQZDwsUazlZnJOWrLSoTCYzPNXuup6ip6SorMfqzDsqJB0RCwggocanj46cOzx5IB42sqGqopel1cC8x03TtOYpIRcMBgypmq6TjJc6GSosGzejlpqmn6Y7MPy8vb2rrTkdFgwGB8WOnZeOlz8TGTEpRZ6Pk6q4szkmO7CmsrGyTh0UDAcI14uXm5OdNBAVR9/Im4+WuTx7OSz9qKGrvco7HBELBwygiZidmKoeDRu2q6iXkZ48JkdmP8Ohn7hNPy4dDwoJFZOJmp+fyhkOJaSfoJiVpyoiVL3MvKalzTc8LRkNCQtVio6ho7ArERPGmZuem5zNHyrAr7mzq6toLy8iEQoJGo+JnKmvSxgOKJmTnJ+cqyYcQK+ts7Oszi4qKRcLBhSOh5ipxFQgDiCbkpafpqg1HjW5p63Nvss5LCEUCgUXjYeVrkQ+IBAlnI+So7CtOiU2u5+p5MnZPCweEQo=",
+      "step_time": 0.007684969925321639,
+      "context_id": "b",
+      "request_id": "req_02f27c33ee130be1be7e02ec4b542fdd"
+     }
+    },
+    {
+     "send": {
+      "type": "chunk",
+      "status_code": 206,
+      "done": false,
+      "data": "BSGIh5O2LzoeESubjZCpv7w8LDO+nqnbWEhILxsOBwfQh4mW+C4/HRY7m42Ssb/HPDIzuJ6ry0M+UC0WDAUMnoaJmzkuMhsbTJqMlrC93Es0Lrmhqsg2OUQoFAoFFJWHi6IyNy8cH0+ZjZesy196PDXBqae+Nzo6JRIIBhySiI2pMjYtHyFImo+XpclY9UFAyLCpuz06NSYUCQcbmImMpD02LyclN6SUlZ/AT+pjTGnBsL5NPTUqGAwJE66NjJnXOzgvKivDnJWarN/r33FTUce6x286Kx0RCw0tm46SqW9LQDovObafmp+zz9bNyOV+191oRjIlGhIOEzCml5inub69v1s9UrunpKy0u7m0vM9ZTE5FNSgeGRUWIVKsoqasra6tttdSXMWzsri+v7i3u8X0WE1FPS4lHxwbIjPctbO0sa+srLXE2cq7ubzI287BvL3M72VbTUI3LikmIyMqNFPSy8C5sqysr7W7v8LCwcLK1tbNy9Hqbm/1Ykc4LiopJyouOEll28q/ubKura6zur/DxcrV3NbTzMvQ3OVvXk0/OTIuLCorLjVHZ+DMwru0sK+zuby8vL/J293Yz8vJyM7c7GFMQz07NzQyLy4wN0BOa9fJv7q2tLa7vr6+vb7HzdPU0NHS2d/j9W1WTUY/PTk4NDEyNjxHTVZy3Mm9uLa4u729vb7Dys/U1djc3tzd4+PrfV1QS0Q+OjQvMDM5P0dOVGDnzcC8uru9v8LExcXGy8zMz9La2Nfa2ePzb11WTkdBPDgzMTM3Oz9DR05q0sO9vb/BwcLBxMjLzsvIy8zO0M7Q0tPX3OPvdl1SS0M+OTYyMzY6PkFGUXXSw7/AxMfFxMfN19rXzsrMzc7OzM3O0NTU08/S4HpdTklAOjYyMDY6PkFCSmLax7/BxcvOzc7U3OXf1dDO0tLNy8rN1dPV08/Ly87T3OlsUUY9NDAtLDA4P0tOUPjQwrq7xdT29d7f6XZk8tTMx8rOzMrIyM/Y3M+/vMHHzdjVdlA9LyokIB8fLfe5rbrq68+7r7p3Pzhaw8TUSTtZzLy5ytnHvbS1x9bKuaytuMxVaGw6Kh4ZGBUXGiyfjoyU2h8dITtILzfLoZafViEZJFjCurmxnpum6SgoXq+lp7CsrLn9LSUqKSQZDw0PH52HhY5yEA0VJ9vlvJ2Ula0cDhMnqp6kq7a1slktLVKlmpyrXDdL7Luur7PZLiAaFxYQEBuVgIGQFwMJHNKfp6qdnq0oDxElrJacr9VCTksyQMqpnqO8QzNdt7Cut7jCVjkwKy0nHxcPEGuGgIwtBAUbvJmbtrCu4ikTFTygkZjNKyUqS1vWq6Kgrj0sNeWrpKmruttKNj9b9Gc+KR0VERW9hoSUHwQKL6WXoV28ujwkFh6zmpeoLCY1VrvRXrKnp700LUa/qqyvq7TPSTVDyMHKRy4qIhcSE1KIg5IlBgkvoZejRtGzXikZHbubmq0sIzX9u9tEx66rtUY6brqrrbe0uMTdRljO21lCOz8zJRkTFDqMhZMrCQszoJmmRmq6XiocIA==",
+      "step_time": 0.00783607002813369,
+      "context_id": "b",
+      "request_id": "req_02f27c33ee130be1be7e02ec4b542fdd"
+     }
+    },
+    {
+     "send": {
+      "type": "chunk",
+      "status_code": 206,
+      "done": false,
+      "data": "up2cry4mOHHGz/a3q67JPTnVsqy4zMC9u7W8yHNCPz08TOs9JhgQD0uLiJghCxXpp6S427C7MCEfPaikslQ5W9FRSGW8q7VZSGO+rrW/ysm5tbq5vL/OTz9BSE1CMishGA8kmY+YYhkdSc6+x8mssz0pJ0CztNNqX9rsPT7dvbm/0c/JycG5tLS8vLi2srfCz+5dTUQ+Pz04Kx8UFVqcmqg6Jjg7NVu9qqjWNTU9Yv1Q1rq83T8+7cfFyMi9u8THvru5u7qzs7m8v8DI7VhYSUU9NS8oHRgmwKyuwlL7Ti81YcG5ymbf501ESnzFzfr129ne3sq8vsbEv77Awruzs7e8vr7FztPa6lhAOjYzLioiIDBNWXLx1clXP13d/Hp02MvkX3jf3/Vl+N7e4NnMys3LxsPBw8C8vL69vr6/yc7N0tv0WUtDPTk3NC4sMDc5PkZOYGRe6t3z9Ovm3+j15eDp9u7a2+br3s7O3t7OysvIxcLDx8bFx8nJy9Da3u1tX1lSTEdEQz47PTw8Pz9BREZLWmFhbe/2/OLc3+Xn3tzc2NbX19fa2dfU1NfV0dLW1dLV29rb3+Ts735jXV9aVFZbWVRSUlBNTU5OTk9PT09QU1ZcYWVlZ2xvcHr39fLu7/T18+3q6ufk5Obk4+Tj4uTo6uvu9ft+d3h5eXt9enh0b29wb29xcW9ta2pqa250eHt9fX7//fv39PHv8fHx8/Lw7+7t6ujo6Ojp6uvr6uvs7u/x8/T08/T29/j5+vr6+fj3+Pn6/Pz8+vj39vT09PPy8O/v7+7v7+/w8PDv7+7u7e3t7e3u7u/v7/Dy8/X2+Pr7/Pz8+/z9/f39/v7+/n5+fn5+fv/+/v79/Pz7+vr6+vr6+/v7/Pz8/Pz8/Pz8/Pz9/f7+/359e3p6eXh3d3Z2dnZ2dnZ1dXV0dHR0c3Rzc3N0dHR0dHV2dnZ2dnZ2dXZ1dXZ2dnV1dXV1dXV1dXRzc3JycXFwcG9vb29vb29vbm5vb29vb25ubm5ubm9vb29vb29vcHBvcHFxcXFxcXFxcXFxcXFxcHFxcXFxcXBwcHBwcHBwcHBwcXFxcnJycnJzc3N0dHR0dHV1dXZ2d3d3d3h4eHl5eXl6enp6enp7e3t7e3x8fHx8fX19fX19fX19fn5+fn5+fn7//v7+/v39/f39/fz8/Pz7/Pv7+/r7+vr6+vr6+vr5+fr5+fn5+fn5+Pj4+fn4+Pj4+Pj4+Pj49/f39/j49/f39vb29/b29/b39/b29/X29vf39/b29/b39vf29vf29vb29vf29/f39/f39vb29vb29vb39vf29vb19vX19fX19fX19fX19fX19fT19fX09fb19fX19fb29fX29fb29vb29fX19fb29/b39vb39/j19/f39/f29vf19/f29/X49/j39fb39/j39/f49vP59fn5+fn4+vr7+fj3+/r89/z5+PX+9vz9+fj5fvp59/7wde9u6HL47X7zZeRrcOpqZdRd2ma5w3XHP85L3WJQb0XZV9jz5+vZ7tPs2OD0z1LRT9k=",
+      "step_time": 0.007974700070917606,
+      "context_id": "b",
+      "request_id": "req_02f27c33ee130be1be7e02ec4b542fdd"
+     }
+    },
+    {
+     "send": {
+      "type": "chunk",
+      "status_code": 206,
+      "done": false,
+      "data": "WWdobHJm3mLUX8xc0mbi5/nja+dk5mfeX99m5GX1dm/1enzu9/b+/Pd59WruXuxb5l/4aX5n+Px6+vj++/Rk4FveWOpe9Wz4bvhp8ftu7m/ra9xZ3FncWeVi+Gh2/GXeWt9d3lzfXt9e3WD9dl3fVtpZ5WfuZO15eHdsfP5u8H5t9FzfXO1oeGzvc235YOFa5WbuZv1rbe9f6Gz+bOdg925wdWn3ZvRtbvZf5GRq7mL+cPpl9mp1c/xme3pqc3Bwdnd8/W71a/pn9W36a3H1Yupm7ml3817fYPd7b/Zp7mLtbmvuY/lse3hp62n2cXl4bPl1afdt/vxm6GLscW7sbO9s/vJn7X5p6G128GT3aHRzXm9cZ1paXlVaW1deXVplX2xrcvf86OLc1tTOzsrIy8XKxcnKydPP2uVualBNRD88NjEwMS4zNTk+UXfTwLq4trO6vcHXbFlLREdOTO/Rxrq0sa6tra+xtL7Bze9qVkRBOTovLyIlLx4qNS49xry0qqCnq6Oy38lMKy8sKCk1QkTIsresp62vr73q8lo8P1VS8Ly2s6uprK6vv/BKNywoHxgkHxsyQDq9pqmknp6sr65ILjsoHyotKjjTw7+qpq+tq8R8dUMvNjw0PtLMvKuqqqanr7C4zVZNOzMtLSgpHiA/JCu92UqkpLejor3Bv0MvLS8oJzlAPcavuLKorrq+zlw2NUQ2M2DW47iuta+ttru61OrTTWLWXvjBYlraPzA0KBsrMyAztefLn6OvparWXT0yKyYsPTZOsrO3qKm7v8xFNC8tLi88e8q8rautrrPC6kc6NzE1RFvOt7KurK+3wHtLPjUzOThAV1dy11VBMyhG/DFGrLjLqai7w+FFPSwpO0A14K+0tKyut89HQDssKz1MTtC1rq60trnbQD08MzJAadnGuLGzvMPLZ0I/Pz9FWdfEvbq5vsz1Tz85NDAvLy0wVL+8uK6qrr7abEgyLDA8SGfHta+yusDMXz85PEFJXs68uLm8v81nR0BBRElc08K+vr/G12JLREJCR1R81srGx8vV8l5OTFBXX+nU0M/P1+HwYVddZ23l1dTS0t37X05HQkJBQ0VM+M7MzMvO2XVQSElMTl3fyb68v8PI119LRUJBRUtLWNTGxsjN1NtpSkJFSU9ZcNTEv8TL0tv4WEtKU19pde7b09nybGZfWlRSWm399erh3uP0bWZjX1taXmpvb3V8/Px7dnr/fnJsa21sZWFmbXf9+/Pn5e1+b21rZ2JgZXPy7+/u7uvveWxoZ2dmaG17+PLz9fP0fnFraWprbG53/Pb09Pj39n5xbm5wdXV3fvj5+/5+fHh0c3V3fH18fvv7+vr+fnt5eXd0dXp8fH5+fv38/P57e357eHV1d3t7enx+/Pv9/v5+end4enp6eXv9/P7//n5+fnp4dnp9fn79+/n5/H58e3p5d3d5fH39+/z8+/1+fHp4eHh4e35+//7+/v9+fHt8fHx7en1+/317enl6eXp7fHx8fH19fX58fHt7e3x8fHt6e3t6ent8fX19fn5+fXs=",
+      "step_time": 0.00792613998055458,
+      "context_id": "b",
+      "request_id": "req_02f27c33ee130be1be7e02ec4b542fdd"
+     }
+    },
+    {
+     "send": {
+      "type": "chunk",
+      "status_code": 206,
+      "done": false,
+      "data": "e3p5d3d3eHl5eXl5ent6eXd2dnd3dnd4enp6eXh4eHh3dnV0dXZ3d3Z3dnd3dXV1dnV0c3R1dnV1dnZ2dnV0c3Nzc3N0dXZ1dHR0dHNyc3R0dHR0dXZ2dXRzc3Nzc3NzdHR0dHR0dHR0dHRzc3Rzc3Nzc3Jzc3NycnJzc3NycnNzc3Nyc3Rzc3JycnNzc3N0c3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3NycnJzdHR0dHR0dXR0c3Nzc3Nzc3R1dHR0dHR0dHR0dHR0dHR0dHR0dHRzc3Nzc3R0dHR0dHR0c3R0dHRzc3NzdHRzc3RzdHR0dHR0c3Nzc3Nzc3NzdHNzc3Nzc3NzdHR0c3Nzc3Nzc3Nzc3NycnNycnNycnJycnJyc3NzcnJycnNzcnJycnNzc3Nzc3Nzc3Nzc3NzdHR0dHR0dHR0dHV1dnZ2dnZ2d3d3d3d4d3h4eHh4eHl5eXl5eXp6enp6enp6ent6ent7e3x8fHx8fHx8fX1+fn5+fv9+/v5+//////7+/f7+/v39/Pz8/P38/Pz8+/v7+/r6+vr6+vn5+fn5+fn5+Pj4+Pj4+Pj39/f39/f39/f39/b29/f39/f39/b39/f39/b29vf29/f39/f3+Pj4+Pj4+Pj4+Pn4+Pj4+Pn5+fn5+fn5+fr6+vr6+vr7+vr6+vv6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr5+fn5+fn5+fn5+fn5+fn5+fn5+Pj4+Pn5+fn5+fn5+fn5+fn6+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+vr6+vr6+vr6+vr7+vv7+/v7/Pz8+/v7/Pz8/Pz8/Pz8/Pz9/f39/f3+/v7+/v7+/v7+/35+fn5+fn5+fn5+/////35+fn5+fn5+fn1+fn5+fn59fn5+fn5+fn5+fn5+fn5+fn5+fn5+fv////////////9+fv////7+/f39/fz8+/z8/Pv8+/v7+/v6+vr6+fn5+Pj4+Pf39/b29vb19fX09PTz8/Pz8vLy8fHw7+/v7+/v7+/u7u7u7u7u7u7t7e3t7Ozs7Ozs7Ozs7Ozr6+vr6+vr6+rr6+rr6+vr6+vr6+vq6urq6urq6urq6urq6urq6urq6urq6urr6+vr6+vr6+vr6+vr6+vr6+vs7Ozs7Ozs7O3t7e3t7u7u7u7v7+/v7+/v7+/v8PDw8fHx8fLy8vLz8/Pz8/T09fX19vf3+Pj5+fn5+fn5+vr7+/v7/Pv8/P39/f39/f7+/v7+/v7+/v//fn5+fn59fX19fHx8fX18fHx8fHx7e3t7fHt7e3t7e3t7e3t7e3t7e3t7e3t7e3t7e3t7e3x8fHx9fX19fn5+fn5+fn5+fv///v7+/v7///7+/v7+/f39/f39/Pz8/Pv8/Pv8+/v8/Pz7+/v7+/v8+/z8/Pv8/Pz9/f38/f3+/v7+//9+fn19fXx8fHx7e3t7enp5eXh4d3d3d3d3d3Z2dnV1dXV0dHR0dHNzcnJycnJycXFxcXFwcHBvb29vb29vb29vb29vb29vb29vb29vbw==",
+      "step_time": 0.007971599930897355,
+      "context_id": "b",
+      "request_id": "req_02f27c33ee130be1be7e02ec4b542fdd"
+     }
+    },
+    {
+     "send": {
+      "type": "chunk",
+      "status_code": 206,
+      "done": false,
+      "data": "b29vb29vb29vb29vb29vb29vb3BwcG9vb29wcHBwcHBxcXFxcnFxcnFxcnFycnJzc3NzdHR1dXV2dnd3d3h4eHh7/359fn5+fn5+fn59fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fv9+fv////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8=",
+      "step_time": 8.418003562837839e-05,
+      "context_id": "b",
+      "request_id": "req_02f27c33ee130be1be7e02ec4b542fdd"
+     }
+    },
+    {
+     "send": {
+      "type": "done",
+      "status_code": 200,
+      "done": true,
+      "context_id": "b",
+      "request_id": "req_02f27c33ee130be1be7e02ec4b542fdd"
+     }
+    },
+    {
+     "expect_no_more": true
+    }
+   ]
+  }
+ ],
+ "client": [
+  {
+   "op": "send",
+   "context": "b",
+   "request": {
+    "text": "दूसरा वाक्य।",
+    "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+    "model": "m1",
+    "language": "hi",
+    "output_format": {
+     "container": "raw",
+     "encoding": "pcm_mulaw",
+     "sample_rate": 8000
+    }
+   }
+  },
+  {
+   "op": "send",
+   "context": "b",
+   "request": {
+    "text": "तीसरा वाक्य।",
+    "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+    "model": "m1",
+    "language": "hi",
+    "output_format": {
+     "container": "raw",
+     "encoding": "pcm_mulaw",
+     "sample_rate": 8000
+    }
+   }
+  }
+ ],
+ "expect": {
+  "contexts": {
+   "b": [
+    {
+     "outcome": "error",
+     "audio_bytes": 0,
+     "error": {
+      "class": "InternalServerError",
+      "status": 503,
+      "error_code": null,
+      "retryable": true,
+      "request_id": "req_803eb263432b70ea339251c2981a1633"
+     }
+    },
+    {
+     "outcome": "done",
+     "audio_bytes": 7680,
+     "audio_sha256": "dfd5201c3fea7b4f2546a73eecd30a39b9ffe15c070ca8a5877e5870fb498cf3",
+     "request_id": "req_02f27c33ee130be1be7e02ec4b542fdd"
+    }
+   ]
+  },
+  "connections": 1,
+  "sleeps": []
+ }
+}

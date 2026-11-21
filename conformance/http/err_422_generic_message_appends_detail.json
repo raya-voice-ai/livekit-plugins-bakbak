@@ -1,0 +1,85 @@
+{
+ "id": "err_422_generic_message_appends_detail",
+ "description": "A message that does not already contain the rendered detail list is followed by it (BEHAVIOR.md 3.2).",
+ "call": {
+  "method": "stream",
+  "params": {
+   "text": "नमस्ते, आप कैसे हैं?",
+   "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+   "model": "m1",
+   "language": "hi",
+   "output_format": {
+    "container": "raw",
+    "encoding": "pcm_mulaw",
+    "sample_rate": 8000
+   }
+  }
+ },
+ "exchanges": [
+  {
+   "expect_request": {
+    "method": "POST",
+    "path": "/v1/text-to-speech/stream",
+    "headers": {
+     "x-api-key": "test-key",
+     "content-type": "application/json"
+    },
+    "json": {
+     "text": "नमस्ते, आप कैसे हैं?",
+     "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+     "model": "m1",
+     "language": "hi",
+     "output_format": {
+      "container": "raw",
+      "encoding": "pcm_mulaw",
+      "sample_rate": 8000
+     }
+    }
+   },
+   "response": {
+    "status": 422,
+    "headers": {
+     "content-type": "application/json",
+     "x-request-id": "req_detail"
+    },
+    "json": {
+     "detail": [
+      {
+       "type": "missing",
+       "loc": [
+        "body",
+        "voice_id"
+       ],
+       "msg": "Field required"
+      },
+      {
+       "type": "value_error",
+       "loc": [
+        "body",
+        "output_format",
+        "encoding"
+       ],
+       "msg": "Value error, encoding must be one of: pcm_f32le, pcm_s16le, pcm_mulaw, pcm_alaw",
+       "input": "mulaw",
+       "ctx": {
+        "error": {}
+       }
+      }
+     ],
+     "message": "The request is malformed or invalid."
+    }
+   }
+  }
+ ],
+ "expect": {
+  "error": {
+   "class": "UnprocessableEntityError",
+   "status": 422,
+   "error_code": null,
+   "retryable": false,
+   "request_id": "req_detail",
+   "message": "The request is malformed or invalid. voice_id: Field required; output_format.encoding: Value error, encoding must be one of: pcm_f32le, pcm_s16le, pcm_mulaw, pcm_alaw"
+  },
+  "sleeps": []
+ }
+}

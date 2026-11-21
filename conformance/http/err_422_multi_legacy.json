@@ -1,0 +1,80 @@
+{
+ "id": "err_422_multi_legacy",
+ "description": "Error body as the Router sends it before error_code existed.",
+ "call": {
+  "method": "stream",
+  "params": {
+   "text": "hi",
+   "language": "hi",
+   "model": "m1",
+   "output_format": {
+    "container": "raw",
+    "encoding": "mulaw"
+   }
+  }
+ },
+ "exchanges": [
+  {
+   "expect_request": {
+    "method": "POST",
+    "path": "/v1/text-to-speech/stream",
+    "headers": {
+     "x-api-key": "test-key",
+     "content-type": "application/json"
+    },
+    "json": {
+     "text": "hi",
+     "language": "hi",
+     "model": "m1",
+     "output_format": {
+      "container": "raw",
+      "encoding": "mulaw"
+     }
+    }
+   },
+   "response": {
+    "status": 422,
+    "headers": {
+     "content-type": "application/json",
+     "x-request-id": "req_94a6c9e8181a532656d812a01a4a9f8c"
+    },
+    "json": {
+     "detail": [
+      {
+       "type": "missing",
+       "loc": [
+        "body",
+        "voice_id"
+       ],
+       "msg": "Field required"
+      },
+      {
+       "type": "value_error",
+       "loc": [
+        "body",
+        "output_format",
+        "encoding"
+       ],
+       "msg": "Value error, encoding must be one of: pcm_f32le, pcm_s16le, pcm_mulaw, pcm_alaw",
+       "input": "mulaw",
+       "ctx": {
+        "error": {}
+       }
+      }
+     ]
+    }
+   }
+  }
+ ],
+ "expect": {
+  "error": {
+   "class": "UnprocessableEntityError",
+   "status": 422,
+   "error_code": null,
+   "retryable": false,
+   "request_id": "req_94a6c9e8181a532656d812a01a4a9f8c",
+   "message_contains": "voice_id: Field required"
+  },
+  "sleeps": []
+ }
+}

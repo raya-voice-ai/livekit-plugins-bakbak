@@ -1,0 +1,81 @@
+{
+ "id": "voices_ok",
+ "description": "Voice catalog. Filters (model, language) are applied by the SDK, not the server.",
+ "call": {
+  "method": "voices.list",
+  "params": {}
+ },
+ "exchanges": [
+  {
+   "expect_request": {
+    "method": "GET",
+    "path": "/v1/voices",
+    "headers": {
+     "x-api-key": "test-key"
+    }
+   },
+   "response": {
+    "status": 200,
+    "headers": {
+     "content-type": "application/json; charset=utf-8",
+     "x-request-id": "req_2a6d6f0ab856d45286d14e5efd418849"
+    },
+    "json": {
+     "voices": [
+      {
+       "id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+       "name": "Anika M1",
+       "language": "hi",
+       "model": "m1"
+      },
+      {
+       "id": "029d327b-987b-4879-8375-454cba8424ec",
+       "name": "Raj M1",
+       "language": "hi",
+       "model": "m1"
+      },
+      {
+       "id": "0ffd8c73-7c39-4b22-92f4-ebf33a6fae2c",
+       "name": "Kavya M1",
+       "language": "kn",
+       "model": "m1"
+      },
+      {
+       "id": "1cbc539d-c456-4045-a99e-57afd746235e",
+       "name": "Avani",
+       "language": "en",
+       "model": "m1"
+      },
+      {
+       "id": "236b784a-9715-46de-840e-51db2f446d4d",
+       "name": "Ridhi",
+       "language": "en",
+       "model": "m1"
+      },
+      {
+       "id": "27ecee77-5bba-4894-9800-5be26c78837d",
+       "name": "Dhruvi M1",
+       "language": "hi",
+       "model": "m1"
+      }
+     ],
+     "count": 6
+    }
+   }
+  }
+ ],
+ "expect": {
+  "result": {
+   "count": 6,
+   "ids": [
+    "009ae8b5-4a03-492d-af1c-3055989ac734",
+    "029d327b-987b-4879-8375-454cba8424ec",
+    "0ffd8c73-7c39-4b22-92f4-ebf33a6fae2c",
+    "1cbc539d-c456-4045-a99e-57afd746235e",
+    "236b784a-9715-46de-840e-51db2f446d4d",
+    "27ecee77-5bba-4894-9800-5be26c78837d"
+   ]
+  },
+  "sleeps": []
+ }
+}

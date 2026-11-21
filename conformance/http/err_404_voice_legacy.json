@@ -1,0 +1,62 @@
+{
+ "id": "err_404_voice_legacy",
+ "description": "Error body as the Router sends it before error_code existed.",
+ "call": {
+  "method": "stream",
+  "params": {
+   "text": "नमस्ते, आप कैसे हैं?",
+   "voice_id": "no-such-voice",
+   "model": "m1",
+   "language": "hi",
+   "output_format": {
+    "container": "raw",
+    "encoding": "pcm_mulaw",
+    "sample_rate": 8000
+   }
+  }
+ },
+ "exchanges": [
+  {
+   "expect_request": {
+    "method": "POST",
+    "path": "/v1/text-to-speech/stream",
+    "headers": {
+     "x-api-key": "test-key",
+     "content-type": "application/json"
+    },
+    "json": {
+     "text": "नमस्ते, आप कैसे हैं?",
+     "voice_id": "no-such-voice",
+     "model": "m1",
+     "language": "hi",
+     "output_format": {
+      "container": "raw",
+      "encoding": "pcm_mulaw",
+      "sample_rate": 8000
+     }
+    }
+   },
+   "response": {
+    "status": 404,
+    "headers": {
+     "content-type": "application/json",
+     "x-request-id": "req_e5867f33488595c216160dccf7832098"
+    },
+    "json": {
+     "detail": "{\"error\":\"unknown voice_id: 'no-such-voice'\"}"
+    }
+   }
+  }
+ ],
+ "expect": {
+  "error": {
+   "class": "NotFoundError",
+   "status": 404,
+   "error_code": null,
+   "retryable": false,
+   "request_id": "req_e5867f33488595c216160dccf7832098",
+   "message_contains": "unknown voice_id"
+  },
+  "sleeps": []
+ }
+}

@@ -1,0 +1,150 @@
+{
+ "id": "err_429_retries_exhausted",
+ "description": "Retryable; Retry-After honoured; 1 try + 2 retries, then the error.",
+ "call": {
+  "method": "stream",
+  "params": {
+   "text": "नमस्ते, आप कैसे हैं?",
+   "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+   "model": "m1",
+   "language": "hi",
+   "output_format": {
+    "container": "raw",
+    "encoding": "pcm_mulaw",
+    "sample_rate": 8000
+   }
+  }
+ },
+ "exchanges": [
+  {
+   "expect_request": {
+    "method": "POST",
+    "path": "/v1/text-to-speech/stream",
+    "headers": {
+     "x-api-key": "test-key",
+     "content-type": "application/json"
+    },
+    "json": {
+     "text": "नमस्ते, आप कैसे हैं?",
+     "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+     "model": "m1",
+     "language": "hi",
+     "output_format": {
+      "container": "raw",
+      "encoding": "pcm_mulaw",
+      "sample_rate": 8000
+     }
+    }
+   },
+   "response": {
+    "status": 429,
+    "headers": {
+     "content-type": "application/json",
+     "x-request-id": "req_52276699f92dfd6939e0f242511ef602",
+     "retry-after": "1"
+    },
+    "json": {
+     "error": "Too many concurrent requests",
+     "error_code": "concurrency_limit_exceeded",
+     "message": "This account allows 2 concurrent requests and 2 are in progress.",
+     "concurrency_limit": 2,
+     "retryable": true,
+     "request_id": "req_52276699f92dfd6939e0f242511ef602"
+    }
+   }
+  },
+  {
+   "expect_request": {
+    "method": "POST",
+    "path": "/v1/text-to-speech/stream",
+    "headers": {
+     "x-api-key": "test-key",
+     "content-type": "application/json"
+    },
+    "json": {
+     "text": "नमस्ते, आप कैसे हैं?",
+     "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+     "model": "m1",
+     "language": "hi",
+     "output_format": {
+      "container": "raw",
+      "encoding": "pcm_mulaw",
+      "sample_rate": 8000
+     }
+    }
+   },
+   "response": {
+    "status": 429,
+    "headers": {
+     "content-type": "application/json",
+     "x-request-id": "req_52276699f92dfd6939e0f242511ef602",
+     "retry-after": "1"
+    },
+    "json": {
+     "error": "Too many concurrent requests",
+     "error_code": "concurrency_limit_exceeded",
+     "message": "This account allows 2 concurrent requests and 2 are in progress.",
+     "concurrency_limit": 2,
+     "retryable": true,
+     "request_id": "req_52276699f92dfd6939e0f242511ef602"
+    }
+   }
+  },
+  {
+   "expect_request": {
+    "method": "POST",
+    "path": "/v1/text-to-speech/stream",
+    "headers": {
+     "x-api-key": "test-key",
+     "content-type": "application/json"
+    },
+    "json": {
+     "text": "नमस्ते, आप कैसे हैं?",
+     "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+     "model": "m1",
+     "language": "hi",
+     "output_format": {
+      "container": "raw",
+      "encoding": "pcm_mulaw",
+      "sample_rate": 8000
+     }
+    }
+   },
+   "response": {
+    "status": 429,
+    "headers": {
+     "content-type": "application/json",
+     "x-request-id": "req_52276699f92dfd6939e0f242511ef602",
+     "retry-after": "1"
+    },
+    "json": {
+     "error": "Too many concurrent requests",
+     "error_code": "concurrency_limit_exceeded",
+     "message": "This account allows 2 concurrent requests and 2 are in progress.",
+     "concurrency_limit": 2,
+     "retryable": true,
+     "request_id": "req_52276699f92dfd6939e0f242511ef602"
+    }
+   }
+  }
+ ],
+ "expect": {
+  "error": {
+   "class": "RateLimitError",
+   "status": 429,
+   "error_code": "concurrency_limit_exceeded",
+   "retryable": true,
+   "request_id": "req_52276699f92dfd6939e0f242511ef602"
+  },
+  "sleeps": [
+   [
+    1.0,
+    1.0
+   ],
+   [
+    1.0,
+    1.0
+   ]
+  ]
+ }
+}

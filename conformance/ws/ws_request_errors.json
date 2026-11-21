@@ -1,0 +1,208 @@
+{
+ "id": "ws_request_errors",
+ "description": "Refusals end their request only; the connection and other contexts carry on. A message about no request is a connection-level notice.",
+ "connections": [
+  {
+   "script": [
+    {
+     "recv": {
+      "text": "नमस्ते, आप कैसे हैं?",
+      "model": "m1",
+      "language": "hi",
+      "output_format": {
+       "container": "raw",
+       "encoding": "pcm_mulaw",
+       "sample_rate": 8000
+      },
+      "context_id": "e1"
+     }
+    },
+    {
+     "recv": {
+      "text": "नमस्ते, आप कैसे हैं?",
+      "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+      "model": "nope",
+      "language": "hi",
+      "output_format": {
+       "container": "raw",
+       "encoding": "pcm_mulaw",
+       "sample_rate": 8000
+      },
+      "context_id": "e3"
+     }
+    },
+    {
+     "recv": {
+      "text": "नमस्ते, आप कैसे हैं?",
+      "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+      "model": "m1",
+      "language": "hi",
+      "output_format": {
+       "container": "wav",
+       "encoding": "pcm_s16le"
+      },
+      "context_id": "e4"
+     }
+    },
+    {
+     "send": {
+      "type": "error",
+      "status_code": 422,
+      "done": true,
+      "message": "The request is malformed or invalid.",
+      "detail": [
+       {
+        "type": "missing",
+        "loc": [
+         "body",
+         "voice_id"
+        ],
+        "msg": "Field required"
+       }
+      ],
+      "context_id": "e1",
+      "request_id": "req_b36a521f28f54f7a0dd90ea7f1a2de99"
+     }
+    },
+    {
+     "send": {
+      "type": "error",
+      "status_code": 400,
+      "done": true,
+      "message": "Send each request as a JSON text message."
+     }
+    },
+    {
+     "send": {
+      "type": "error",
+      "status_code": 422,
+      "done": true,
+      "message": "The request is malformed or invalid.",
+      "detail": [
+       {
+        "type": "value_error",
+        "loc": [
+         "body",
+         "output_format",
+         "container"
+        ],
+        "msg": "Value error, container must be raw on the streaming endpoint; wav and mp3 are available on /v1/text-to-speech",
+        "input": "wav",
+        "ctx": {
+         "error": {}
+        }
+       }
+      ],
+      "context_id": "e4",
+      "request_id": "req_ca26e74cc197fd96c39efd0b70845d34"
+     }
+    },
+    {
+     "send": {
+      "type": "error",
+      "status_code": 400,
+      "done": true,
+      "message": "The requested model is not available.",
+      "context_id": "e3",
+      "request_id": "req_2baffb4feda84b30cd0fcb28983511f1"
+     }
+    },
+    {
+     "expect_no_more": true
+    }
+   ]
+  }
+ ],
+ "client": [
+  {
+   "op": "send",
+   "context": "e1",
+   "request": {
+    "text": "नमस्ते, आप कैसे हैं?",
+    "model": "m1",
+    "language": "hi",
+    "output_format": {
+     "container": "raw",
+     "encoding": "pcm_mulaw",
+     "sample_rate": 8000
+    }
+   }
+  },
+  {
+   "op": "send",
+   "context": "e3",
+   "request": {
+    "text": "नमस्ते, आप कैसे हैं?",
+    "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+    "model": "nope",
+    "language": "hi",
+    "output_format": {
+     "container": "raw",
+     "encoding": "pcm_mulaw",
+     "sample_rate": 8000
+    }
+   }
+  },
+  {
+   "op": "send",
+   "context": "e4",
+   "request": {
+    "text": "नमस्ते, आप कैसे हैं?",
+    "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+    "model": "m1",
+    "language": "hi",
+    "output_format": {
+     "container": "wav",
+     "encoding": "pcm_s16le"
+    }
+   }
+  }
+ ],
+ "expect": {
+  "contexts": {
+   "e1": [
+    {
+     "outcome": "error",
+     "audio_bytes": 0,
+     "error": {
+      "class": "UnprocessableEntityError",
+      "status": 422,
+      "error_code": null,
+      "retryable": false,
+      "request_id": "req_b36a521f28f54f7a0dd90ea7f1a2de99",
+      "message": "The request is malformed or invalid. voice_id: Field required"
+     }
+    }
+   ],
+   "e3": [
+    {
+     "outcome": "error",
+     "audio_bytes": 0,
+     "error": {
+      "class": "BadRequestError",
+      "status": 400,
+      "error_code": null,
+      "retryable": false,
+      "request_id": "req_2baffb4feda84b30cd0fcb28983511f1"
+     }
+    }
+   ],
+   "e4": [
+    {
+     "outcome": "error",
+     "audio_bytes": 0,
+     "error": {
+      "class": "UnprocessableEntityError",
+      "status": 422,
+      "error_code": null,
+      "retryable": false,
+      "request_id": "req_ca26e74cc197fd96c39efd0b70845d34"
+     }
+    }
+   ]
+  },
+  "connection_notices": 1,
+  "connections": 1,
+  "sleeps": []
+ }
+}

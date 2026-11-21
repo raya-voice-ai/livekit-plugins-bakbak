@@ -1,0 +1,62 @@
+{
+ "id": "err_404_path_gateway",
+ "description": "Refused by the API gateway; body is {message, request_id}.",
+ "call": {
+  "method": "stream",
+  "params": {
+   "text": "नमस्ते, आप कैसे हैं?",
+   "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+   "model": "m1",
+   "language": "hi",
+   "output_format": {
+    "container": "raw",
+    "encoding": "pcm_mulaw",
+    "sample_rate": 8000
+   }
+  }
+ },
+ "exchanges": [
+  {
+   "expect_request": {
+    "method": "POST",
+    "path": "/v1/text-to-speech/stream",
+    "headers": {
+     "x-api-key": "test-key",
+     "content-type": "application/json"
+    },
+    "json": {
+     "text": "नमस्ते, आप कैसे हैं?",
+     "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+     "model": "m1",
+     "language": "hi",
+     "output_format": {
+      "container": "raw",
+      "encoding": "pcm_mulaw",
+      "sample_rate": 8000
+     }
+    }
+   },
+   "response": {
+    "status": 404,
+    "headers": {
+     "content-type": "application/json; charset=utf-8"
+    },
+    "json": {
+     "message": "no Route matched with those values",
+     "request_id": "a9035d681e03941ea5ab2025cc93f876"
+    }
+   }
+  }
+ ],
+ "expect": {
+  "error": {
+   "class": "NotFoundError",
+   "status": 404,
+   "error_code": null,
+   "retryable": false,
+   "request_id": "a9035d681e03941ea5ab2025cc93f876",
+   "message": "no Route matched with those values"
+  },
+  "sleeps": []
+ }
+}

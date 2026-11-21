@@ -1,0 +1,35 @@
+{
+ "id": "ws_handshake_401",
+ "description": "The gateway refuses the upgrade; connect raises AuthenticationError.",
+ "connections": [
+  {
+   "reject": {
+    "status": 401,
+    "headers": {
+     "content-type": "application/json; charset=utf-8"
+    },
+    "json": {
+     "message": "Unauthorized",
+     "request_id": "fe9375253ea15a2a2072ab4ca797d20d"
+    }
+   }
+  }
+ ],
+ "client": [
+  {
+   "op": "connect"
+  }
+ ],
+ "expect": {
+  "connect_error": {
+   "class": "AuthenticationError",
+   "status": 401,
+   "error_code": null,
+   "retryable": false,
+   "request_id": "fe9375253ea15a2a2072ab4ca797d20d",
+   "message": "Unauthorized"
+  },
+  "connections": 1,
+  "sleeps": []
+ }
+}

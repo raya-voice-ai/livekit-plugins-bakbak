@@ -1,0 +1,110 @@
+{
+ "id": "ws_late_audio_after_cancel_dropped",
+ "description": "Audio for a cancelled context that arrives before the ack is discarded, never delivered.",
+ "connections": [
+  {
+   "script": [
+    {
+     "recv": {
+      "text": "यह एक लंबा वाक्य है जिसे हम रद्द करने वाले हैं, ताकि हम देख सकें कि रद्द करना कैसे काम करता है। यह एक लंबा वाक्य है जिसे हम रद्द करने वाले हैं, ताकि हम देख सकें कि रद्द करना कैसे काम करता है। यह एक लंबा वाक्य है जिसे हम रद्द करने वाले हैं, ताकि हम देख सकें कि रद्द करना कैसे काम करता है। ",
+      "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+      "model": "m1",
+      "language": "hi",
+      "output_format": {
+       "container": "raw",
+       "encoding": "pcm_mulaw",
+       "sample_rate": 8000
+      },
+      "context_id": "c1"
+     }
+    },
+    {
+     "send": {
+      "type": "chunk",
+      "status_code": 206,
+      "done": false,
+      "data": "/fv7+vv7/Pv8+/z9/f79/vz8/Pz6+/v7/fz8/v7+ff99fX5+/v7//vz+/v39/f3+/n5+fn1+fn1+fn7//n79/f/+/n7+/f/8/f38/Pz7/Pv7/Pz7+/v7+/v7+vr6+Pf49/j29vf49/f49/f29/X49/f49/j5+ff49/f49vf49vb29fX19PX28/X19vX39vX29vf4+Pn6+vr5+/v6/Pv8/Pv8/fz7/Pr8/Pv7+/n6+fb29PPz8/Dy7/Dv7+/w8PHz9Pf4+/1+fHh2dHJycXBwcXFydHd6ffz49O/u6+no5eTj4uLi4uTm6e3x+Hx0bmllYV5dW1pZWVlaWlxeYmhufPPo39vW0s/Ny8rJycrKzM7R193rd2JYT0tHQz8+PDs7Ojs8PkNKVW/czcO9uba0s7Kys7W3ubzAyM/eeVpNRj88ODUxLy4tLS4wNjtEU/LSxb66uLa1tra4ubu9v8LGyczO0NPW3OHxbl5TSkQ+OjYyLy8uLjA0OD5JWurQyL+9vLu6u7u8vr/Bw8XHyMjJyszO0djf92ZXTEQ+OjUyLy4uLzA1O0BPbdrKwr68urq6u7y9vsDDxcjIysvMzc7P0drd9m5aT0dAOzc0MC8uLy8zOD5IW+zQx8G+vLu7u7y9vr/CwsbGx8jJys3N0NTa5f5jV0tGPjs2My8vLi8xNDo/TF7i0MfBvr28vLy9vr/Bw8XGyMfLyczKz8/W2+L5bFhPR0A8OTQzLy8vMDQ4PkdY8tjIw769u7y8vb6/wsHFxcjGy8fKyszQ09jf93tZVUpFPjs3NTIwMDEzNzxCTmbj0MbDvr29vL2+v8HEx8bKycnMy8zMzs7X1ubwaVpQSUM8OjMzLy8vMjM4PkNcatLMwL+8u7y6vb2/wMXGx8zKzdPM0c3Rz9rY6WtrTks9PTQ0Ly4uLi8yOTtKU+jPxb+7u7i5uru9v8HFycfUyM/JzMzJz8jcz+tqXkZCODYuLisqLCwxMz1HZ9fFuriys7KztLu6v8nD3srdzc7Lx8q9zL7OyuVsTDw3KywlJSUkJyowNlLiwbOvqqqorKyvubrK0dz98OTYy8K+uri6uMPKcUoyKicdHxwcHiAoLk7Xr6minp+eoKaur85n/jpDSEp+x7q1qq6rrbnLcy8fIRUVFREWGyEsy7Gil5eVk5mbo7bPPi4qKiozT9Gto5+bnJ+lvlcqFhMNCgwMDhgqQqaWk4uKjY6ToLlFIRoaFxsnPr6elpKOj5Wdsi4eCgcFAAUIDh7JnpKHhIWDipKezCAWDwoNEho8pJaMiIeJjZi2KhEGAAECAAgSIqCPh4OBgYiMnTghEQgICw4cvZyOhYSFh42cwSANBQEAAwMFHdigioGEhISMnKsuEhMNCxYmS6GOjIqHjJSbwyUWDgkHBQUOEh61opeOjo+VmahQPyYdJSkxz6ifmpWWmZumu0wrHhgWEQ4MDxgbL7usn5qZnaGhs3DuSTxkwLitoJ6fnaCpsMdHLSkgGxkVDw8ZHCbbtKqhnp+pp63RxsbOwrKqraWfqamqt9tORS0nKB4=",
+      "step_time": 0.019607169087976217,
+      "context_id": "c1",
+      "request_id": "req_17dd5d0ff22bc6ff14e005988b1e7d0c"
+     }
+    },
+    {
+     "recv": {
+      "context_id": "c1",
+      "cancel": true
+     }
+    },
+    {
+     "send": {
+      "type": "chunk",
+      "status_code": 206,
+      "done": false,
+      "data": "/fv7+vv7/Pv8+/z9/f79/vz8/Pz6+/v7/fz8/v7+ff99fX5+/v7//vz+/v39/f3+/n5+fn1+fn1+fn7//n79/f/+/n7+/f/8/f38/Pz7/Pv7/Pz7+/v7+/v7+vr6+Pf49/j29vf49/f49/f29/X49/f49/j5+ff49/f49vf49vb29fX19PX28/X19vX39vX29vf4+Pn6+vr5+/v6/Pv8/Pv8/fz7/Pr8/Pv7+/n6+fb29PPz8/Dy7/Dv7+/w8PHz9Pf4+/1+fHh2dHJycXBwcXFydHd6ffz49O/u6+no5eTj4uLi4uTm6e3x+Hx0bmllYV5dW1pZWVlaWlxeYmhufPPo39vW0s/Ny8rJycrKzM7R193rd2JYT0tHQz8+PDs7Ojs8PkNKVW/czcO9uba0s7Kys7W3ubzAyM/eeVpNRj88ODUxLy4tLS4wNjtEU/LSxb66uLa1tra4ubu9v8LGyczO0NPW3OHxbl5TSkQ+OjYyLy8uLjA0OD5JWurQyL+9vLu6u7u8vr/Bw8XHyMjJyszO0djf92ZXTEQ+OjUyLy4uLzA1O0BPbdrKwr68urq6u7y9vsDDxcjIysvMzc7P0drd9m5aT0dAOzc0MC8uLy8zOD5IW+zQx8G+vLu7u7y9vr/CwsbGx8jJys3N0NTa5f5jV0tGPjs2My8vLi8xNDo/TF7i0MfBvr28vLy9vr/Bw8XGyMfLyczKz8/W2+L5bFhPR0A8OTQzLy8vMDQ4PkdY8tjIw769u7y8vb6/wsHFxcjGy8fKyszQ09jf93tZVUpFPjs3NTIwMDEzNzxCTmbj0MbDvr29vL2+v8HEx8bKycnMy8zMzs7X1ubwaVpQSUM8OjMzLy8vMjM4PkNcatLMwL+8u7y6vb2/wMXGx8zKzdPM0c3Rz9rY6WtrTks9PTQ0Ly4uLi8yOTtKU+jPxb+7u7i5uru9v8HFycfUyM/JzMzJz8jcz+tqXkZCODYuLisqLCwxMz1HZ9fFuriys7KztLu6v8nD3srdzc7Lx8q9zL7OyuVsTDw3KywlJSUkJyowNlLiwbOvqqqorKyvubrK0dz98OTYy8K+uri6uMPKcUoyKicdHxwcHiAoLk7Xr6minp+eoKaur85n/jpDSEp+x7q1qq6rrbnLcy8fIRUVFREWGyEsy7Gil5eVk5mbo7bPPi4qKiozT9Gto5+bnJ+lvlcqFhMNCgwMDhgqQqaWk4uKjY6ToLlFIRoaFxsnPr6elpKOj5Wdsi4eCgcFAAUIDh7JnpKHhIWDipKezCAWDwoNEho8pJaMiIeJjZi2KhEGAAECAAgSIqCPh4OBgYiMnTghEQgICw4cvZyOhYSFh42cwSANBQEAAwMFHdigioGEhISMnKsuEhMNCxYmS6GOjIqHjJSbwyUWDgkHBQUOEh61opeOjo+VmahQPyYdJSkxz6ifmpWWmZumu0wrHhgWEQ4MDxgbL7usn5qZnaGhs3DuSTxkwLitoJ6fnaCpsMdHLSkgGxkVDw8ZHCbbtKqhnp+pp63RxsbOwrKqraWfqamqt9tORS0nKB4=",
+      "step_time": 0.019607169087976217,
+      "context_id": "c1",
+      "request_id": "req_17dd5d0ff22bc6ff14e005988b1e7d0c"
+     }
+    },
+    {
+     "send": {
+      "type": "chunk",
+      "status_code": 206,
+      "done": false,
+      "data": "/fv7+vv7/Pv8+/z9/f79/vz8/Pz6+/v7/fz8/v7+ff99fX5+/v7//vz+/v39/f3+/n5+fn1+fn1+fn7//n79/f/+/n7+/f/8/f38/Pz7/Pv7/Pz7+/v7+/v7+vr6+Pf49/j29vf49/f49/f29/X49/f49/j5+ff49/f49vf49vb29fX19PX28/X19vX39vX29vf4+Pn6+vr5+/v6/Pv8/Pv8/fz7/Pr8/Pv7+/n6+fb29PPz8/Dy7/Dv7+/w8PHz9Pf4+/1+fHh2dHJycXBwcXFydHd6ffz49O/u6+no5eTj4uLi4uTm6e3x+Hx0bmllYV5dW1pZWVlaWlxeYmhufPPo39vW0s/Ny8rJycrKzM7R193rd2JYT0tHQz8+PDs7Ojs8PkNKVW/czcO9uba0s7Kys7W3ubzAyM/eeVpNRj88ODUxLy4tLS4wNjtEU/LSxb66uLa1tra4ubu9v8LGyczO0NPW3OHxbl5TSkQ+OjYyLy8uLjA0OD5JWurQyL+9vLu6u7u8vr/Bw8XHyMjJyszO0djf92ZXTEQ+OjUyLy4uLzA1O0BPbdrKwr68urq6u7y9vsDDxcjIysvMzc7P0drd9m5aT0dAOzc0MC8uLy8zOD5IW+zQx8G+vLu7u7y9vr/CwsbGx8jJys3N0NTa5f5jV0tGPjs2My8vLi8xNDo/TF7i0MfBvr28vLy9vr/Bw8XGyMfLyczKz8/W2+L5bFhPR0A8OTQzLy8vMDQ4PkdY8tjIw769u7y8vb6/wsHFxcjGy8fKyszQ09jf93tZVUpFPjs3NTIwMDEzNzxCTmbj0MbDvr29vL2+v8HEx8bKycnMy8zMzs7X1ubwaVpQSUM8OjMzLy8vMjM4PkNcatLMwL+8u7y6vb2/wMXGx8zKzdPM0c3Rz9rY6WtrTks9PTQ0Ly4uLi8yOTtKU+jPxb+7u7i5uru9v8HFycfUyM/JzMzJz8jcz+tqXkZCODYuLisqLCwxMz1HZ9fFuriys7KztLu6v8nD3srdzc7Lx8q9zL7OyuVsTDw3KywlJSUkJyowNlLiwbOvqqqorKyvubrK0dz98OTYy8K+uri6uMPKcUoyKicdHxwcHiAoLk7Xr6minp+eoKaur85n/jpDSEp+x7q1qq6rrbnLcy8fIRUVFREWGyEsy7Gil5eVk5mbo7bPPi4qKiozT9Gto5+bnJ+lvlcqFhMNCgwMDhgqQqaWk4uKjY6ToLlFIRoaFxsnPr6elpKOj5Wdsi4eCgcFAAUIDh7JnpKHhIWDipKezCAWDwoNEho8pJaMiIeJjZi2KhEGAAECAAgSIqCPh4OBgYiMnTghEQgICw4cvZyOhYSFh42cwSANBQEAAwMFHdigioGEhISMnKsuEhMNCxYmS6GOjIqHjJSbwyUWDgkHBQUOEh61opeOjo+VmahQPyYdJSkxz6ifmpWWmZumu0wrHhgWEQ4MDxgbL7usn5qZnaGhs3DuSTxkwLitoJ6fnaCpsMdHLSkgGxkVDw8ZHCbbtKqhnp+pp63RxsbOwrKqraWfqamqt9tORS0nKB4=",
+      "step_time": 0.019607169087976217,
+      "context_id": "c1",
+      "request_id": "req_17dd5d0ff22bc6ff14e005988b1e7d0c"
+     }
+    },
+    {
+     "send": {
+      "type": "cancelled",
+      "done": true,
+      "context_id": "c1"
+     }
+    },
+    {
+     "expect_no_more": true
+    }
+   ]
+  }
+ ],
+ "client": [
+  {
+   "op": "send",
+   "context": "c1",
+   "request": {
+    "text": "यह एक लंबा वाक्य है जिसे हम रद्द करने वाले हैं, ताकि हम देख सकें कि रद्द करना कैसे काम करता है। यह एक लंबा वाक्य है जिसे हम रद्द करने वाले हैं, ताकि हम देख सकें कि रद्द करना कैसे काम करता है। यह एक लंबा वाक्य है जिसे हम रद्द करने वाले हैं, ताकि हम देख सकें कि रद्द करना कैसे काम करता है। ",
+    "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+    "model": "m1",
+    "language": "hi",
+    "output_format": {
+     "container": "raw",
+     "encoding": "pcm_mulaw",
+     "sample_rate": 8000
+    }
+   }
+  },
+  {
+   "op": "wait_audio",
+   "context": "c1"
+  },
+  {
+   "op": "cancel",
+   "context": "c1"
+  }
+ ],
+ "expect": {
+  "contexts": {
+   "c1": [
+    {
+     "outcome": "cancelled",
+     "audio_bytes": 1163
+    }
+   ]
+  },
+  "connections": 1,
+  "sleeps": []
+ }
+}

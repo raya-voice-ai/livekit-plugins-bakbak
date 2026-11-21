@@ -1,0 +1,72 @@
+{
+ "id": "err_402_insufficient_credits",
+ "description": "Not retryable; extra fields stay readable on the error body.",
+ "call": {
+  "method": "stream",
+  "params": {
+   "text": "नमस्ते, आप कैसे हैं?",
+   "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+   "model": "m1",
+   "language": "hi",
+   "output_format": {
+    "container": "raw",
+    "encoding": "pcm_mulaw",
+    "sample_rate": 8000
+   }
+  }
+ },
+ "exchanges": [
+  {
+   "expect_request": {
+    "method": "POST",
+    "path": "/v1/text-to-speech/stream",
+    "headers": {
+     "x-api-key": "test-key",
+     "content-type": "application/json"
+    },
+    "json": {
+     "text": "नमस्ते, आप कैसे हैं?",
+     "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+     "model": "m1",
+     "language": "hi",
+     "output_format": {
+      "container": "raw",
+      "encoding": "pcm_mulaw",
+      "sample_rate": 8000
+     }
+    }
+   },
+   "response": {
+    "status": 402,
+    "headers": {
+     "content-type": "application/json",
+     "x-request-id": "req_432fb998ac8d85101424c94f1c79499f"
+    },
+    "json": {
+     "error": "Insufficient credits",
+     "message": "The billing account has insufficient balance.",
+     "error_code": "insufficient_credits",
+     "required_inr": 1.56,
+     "available_inr": 0.0005,
+     "retryable": false,
+     "request_id": "req_432fb998ac8d85101424c94f1c79499f"
+    }
+   }
+  }
+ ],
+ "expect": {
+  "error": {
+   "class": "InsufficientCreditsError",
+   "status": 402,
+   "error_code": "insufficient_credits",
+   "retryable": false,
+   "request_id": "req_432fb998ac8d85101424c94f1c79499f",
+   "message": "The billing account has insufficient balance.",
+   "body_fields": {
+    "required_inr": 1.56,
+    "available_inr": 0.0005
+   }
+  },
+  "sleeps": []
+ }
+}

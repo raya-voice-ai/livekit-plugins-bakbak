@@ -1,0 +1,62 @@
+{
+ "id": "err_400_model_legacy",
+ "description": "Error body as the Router sends it before error_code existed.",
+ "call": {
+  "method": "generate",
+  "params": {
+   "text": "नमस्ते, आप कैसे हैं?",
+   "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+   "model": "nope",
+   "language": "hi",
+   "output_format": {
+    "container": "raw",
+    "encoding": "pcm_mulaw",
+    "sample_rate": 8000
+   }
+  }
+ },
+ "exchanges": [
+  {
+   "expect_request": {
+    "method": "POST",
+    "path": "/v1/text-to-speech",
+    "headers": {
+     "x-api-key": "test-key",
+     "content-type": "application/json"
+    },
+    "json": {
+     "text": "नमस्ते, आप कैसे हैं?",
+     "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+     "model": "nope",
+     "language": "hi",
+     "output_format": {
+      "container": "raw",
+      "encoding": "pcm_mulaw",
+      "sample_rate": 8000
+     }
+    }
+   },
+   "response": {
+    "status": 400,
+    "headers": {
+     "content-type": "application/json",
+     "x-request-id": "req_8a521467902ec062af801373c09db999"
+    },
+    "json": {
+     "detail": "The requested model is not available."
+    }
+   }
+  }
+ ],
+ "expect": {
+  "error": {
+   "class": "BadRequestError",
+   "status": 400,
+   "error_code": null,
+   "retryable": false,
+   "request_id": "req_8a521467902ec062af801373c09db999",
+   "message_contains": "The requested model is not available."
+  },
+  "sleeps": []
+ }
+}

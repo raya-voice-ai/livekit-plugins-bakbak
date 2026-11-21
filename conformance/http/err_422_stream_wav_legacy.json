@@ -1,0 +1,74 @@
+{
+ "id": "err_422_stream_wav_legacy",
+ "description": "Error body as the Router sends it before error_code existed.",
+ "call": {
+  "method": "stream",
+  "params": {
+   "text": "नमस्ते, आप कैसे हैं?",
+   "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+   "model": "m1",
+   "language": "hi",
+   "output_format": {
+    "container": "wav",
+    "encoding": "pcm_s16le"
+   }
+  }
+ },
+ "exchanges": [
+  {
+   "expect_request": {
+    "method": "POST",
+    "path": "/v1/text-to-speech/stream",
+    "headers": {
+     "x-api-key": "test-key",
+     "content-type": "application/json"
+    },
+    "json": {
+     "text": "नमस्ते, आप कैसे हैं?",
+     "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+     "model": "m1",
+     "language": "hi",
+     "output_format": {
+      "container": "wav",
+      "encoding": "pcm_s16le"
+     }
+    }
+   },
+   "response": {
+    "status": 422,
+    "headers": {
+     "content-type": "application/json",
+     "x-request-id": "req_aa0e5c2360069464b4f940ef965c5776"
+    },
+    "json": {
+     "detail": [
+      {
+       "type": "value_error",
+       "loc": [
+        "body",
+        "output_format",
+        "container"
+       ],
+       "msg": "Value error, container must be raw on the streaming endpoint; wav and mp3 are available on /v1/text-to-speech",
+       "input": "wav",
+       "ctx": {
+        "error": {}
+       }
+      }
+     ]
+    }
+   }
+  }
+ ],
+ "expect": {
+  "error": {
+   "class": "UnprocessableEntityError",
+   "status": 422,
+   "error_code": null,
+   "retryable": false,
+   "request_id": "req_aa0e5c2360069464b4f940ef965c5776",
+   "message_contains": "container must be raw on the streaming endpoint"
+  },
+  "sleeps": []
+ }
+}

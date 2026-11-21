@@ -1,0 +1,65 @@
+{
+ "id": "err_503_not_retryable_by_body",
+ "description": "retryable:false in the body overrides the status default.",
+ "call": {
+  "method": "stream",
+  "params": {
+   "text": "नमस्ते, आप कैसे हैं?",
+   "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+   "model": "m1",
+   "language": "hi",
+   "output_format": {
+    "container": "raw",
+    "encoding": "pcm_mulaw",
+    "sample_rate": 8000
+   }
+  }
+ },
+ "exchanges": [
+  {
+   "expect_request": {
+    "method": "POST",
+    "path": "/v1/text-to-speech/stream",
+    "headers": {
+     "x-api-key": "test-key",
+     "content-type": "application/json"
+    },
+    "json": {
+     "text": "नमस्ते, आप कैसे हैं?",
+     "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+     "model": "m1",
+     "language": "hi",
+     "output_format": {
+      "container": "raw",
+      "encoding": "pcm_mulaw",
+      "sample_rate": 8000
+     }
+    }
+   },
+   "response": {
+    "status": 503,
+    "headers": {
+     "content-type": "application/json",
+     "x-request-id": "req_nr"
+    },
+    "json": {
+     "detail": "x",
+     "error_code": "service_unavailable",
+     "message": "Not now.",
+     "retryable": false,
+     "request_id": "req_nr"
+    }
+   }
+  }
+ ],
+ "expect": {
+  "error": {
+   "class": "InternalServerError",
+   "status": 503,
+   "error_code": "service_unavailable",
+   "retryable": false,
+   "request_id": "req_nr"
+  },
+  "sleeps": []
+ }
+}

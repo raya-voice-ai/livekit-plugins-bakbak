@@ -1,0 +1,78 @@
+{
+ "id": "ws_402_not_retried",
+ "description": "In-band 402 with the new error fields; not retryable.",
+ "connections": [
+  {
+   "script": [
+    {
+     "recv": {
+      "text": "नमस्ते, आप कैसे हैं?",
+      "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+      "model": "m1",
+      "language": "hi",
+      "output_format": {
+       "container": "raw",
+       "encoding": "pcm_mulaw",
+       "sample_rate": 8000
+      },
+      "context_id": "z"
+     }
+    },
+    {
+     "send": {
+      "type": "error",
+      "status_code": 402,
+      "done": true,
+      "error": "Insufficient credits",
+      "message": "The billing account has insufficient balance.",
+      "error_code": "insufficient_credits",
+      "required_inr": 0.01,
+      "available_inr": 0,
+      "retryable": false,
+      "context_id": "z",
+      "request_id": "req_z402"
+     }
+    },
+    {
+     "expect_no_more": true
+    }
+   ]
+  }
+ ],
+ "client": [
+  {
+   "op": "send",
+   "context": "z",
+   "request": {
+    "text": "नमस्ते, आप कैसे हैं?",
+    "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+    "model": "m1",
+    "language": "hi",
+    "output_format": {
+     "container": "raw",
+     "encoding": "pcm_mulaw",
+     "sample_rate": 8000
+    }
+   }
+  }
+ ],
+ "expect": {
+  "contexts": {
+   "z": [
+    {
+     "outcome": "error",
+     "audio_bytes": 0,
+     "error": {
+      "class": "InsufficientCreditsError",
+      "status": 402,
+      "error_code": "insufficient_credits",
+      "retryable": false,
+      "request_id": "req_z402"
+     }
+    }
+   ]
+  },
+  "connections": 1,
+  "sleeps": []
+ }
+}
