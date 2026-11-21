@@ -18,6 +18,7 @@ from typing import Any
 import aiohttp
 import pytest
 from livekit.agents import (
+    APIConnectionError,
     APIConnectOptions,
     APIStatusError,
     APITimeoutError,
@@ -796,4 +797,29 @@ async def test_a_second_cancellation_during_cleanup_still_cancels(
     await closing
     await until(lambda: len(fake.cancels()) == 1)
     await until(lambda: not tts._ws._contexts)
+    await tts.aclose()
+
+
+async def test_a_reconnect_that_fails_with_any_error_fails_the_stream(fake: FakeBakbak) -> None:
+    """The session is closed while a dropped request waits to be resent (review r5):
+    the stream fails promptly instead of hanging."""
+    session = aiohttp.ClientSession()
+    fake.plan = lambda r: Plan(first_delay=0.3, close_after=(0, 1011)) if r.index == 1 else Plan()
+    tts = make_tts(fake, session)
+    stream = tts.stream(conn_options=APIConnectOptions(max_retry=0, timeout=2))
+    stream.push_text("नमस्ते, आप कैसे हैं?")
+    stream.end_input()
+
+    async def consume() -> None:
+        async for _ in stream:
+            pass
+
+    task = asyncio.ensure_future(consume())
+    await until(lambda: len(fake.received) == 1)
+    await session.close()  # e.g. the job's shared session closes
+    started = time.monotonic()
+    with pytest.raises(APIConnectionError):
+        await asyncio.wait_for(task, 3)
+    assert time.monotonic() - started < 1.5
+    await stream.aclose()
     await tts.aclose()

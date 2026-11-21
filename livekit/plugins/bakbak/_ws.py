@@ -305,6 +305,12 @@ class WSClient:
             except APIError as e:
                 self._note_failure(e)
                 raise
+            except Exception as e:
+                # Anything else (a closed aiohttp session, an invalid URL, ...) must
+                # still fail the requests waiting for this socket, never strand them.
+                error = APIConnectionError(f"Could not connect to the Bakbak API: {e}")
+                self._note_failure(error)
+                raise error from e
             sock = _Socket(ws)
             sock.reader = asyncio.create_task(self._read(sock))
             sock.writer = asyncio.create_task(self._write(sock))
@@ -649,11 +655,18 @@ class WSContext:
                     await self._client._acquire(self.timeout)
                 else:
                     await self._client.changed.wait()
-        except APIError as e:
+        except Exception as e:
+            # Nothing ever waits forever (BEHAVIOR.md §6.4): whatever went wrong while
+            # (re)connecting, the waiting requests get an outcome.
+            error = (
+                e
+                if isinstance(e, APIError)
+                else APIConnectionError("The connection to the Bakbak API failed.")
+            )
             pending = list(self._pending)
             self._pending.clear()
             for request in pending:
-                self._emit(WSFailed(request, e))
+                self._emit(WSFailed(request, error))
             self._maybe_finish()
         finally:
             self._pump = None
