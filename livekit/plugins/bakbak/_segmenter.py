@@ -25,7 +25,9 @@ Lengths are in Unicode code points (Python ``str`` indices).
 
 from __future__ import annotations
 
+import re
 import unicodedata
+from collections.abc import Iterator
 from dataclasses import dataclass
 
 VERSION = 1
@@ -151,6 +153,32 @@ def _single_latin_letter(word: str) -> bool:
     return len(word) == 1 and (("a" <= word <= "z") or ("A" <= word <= "Z"))
 
 
+_SPECIAL = re.compile("[\n" + "".join(re.escape(c) for c in sorted(TERMINATORS)) + "]")
+_SPECIAL_CLAUSE = re.compile(
+    "[\n" + "".join(re.escape(c) for c in sorted(TERMINATORS | SOFT_DELIMITERS)) + "]"
+)
+
+
+class _NextSpecial:
+    """Finds the next character that can start a candidate (a newline, a
+    terminator, or with `clause` a soft delimiter), remembering its last answer:
+    the wrap path asks again from a later start many times, and without the
+    memo a long text with no punctuation would be scanned once per piece."""
+
+    def __init__(self, text: str) -> None:
+        self.text = text
+        self.memo: dict[bool, tuple[int, int]] = {}
+
+    def __call__(self, i: int, clause: bool) -> int:
+        lo, at = self.memo.get(clause, (-1, -1))
+        if lo <= i <= at:
+            return at
+        m = (_SPECIAL_CLAUSE if clause else _SPECIAL).search(self.text, i)
+        at = m.start() if m else len(self.text)
+        self.memo[clause] = (i, at)
+        return at
+
+
 @dataclass(frozen=True)
 class _Candidate:
     end: int  # where the sentence ends (exclusive); the next one starts after whitespace
@@ -159,25 +187,34 @@ class _Candidate:
 
 
 def _candidates(
-    text: str, start: int, final: bool, clause: tuple[int, int] | None
-) -> list[_Candidate]:
-    """Boundary candidates in text[start:], in order.
+    text: str,
+    start: int,
+    final: bool,
+    clause: tuple[int, int] | None,
+    nxt: _NextSpecial | None = None,
+) -> Iterator[_Candidate]:
+    """Boundary candidates in text[start:], in order, produced lazily: callers stop
+    at the first one that ends a group, which keeps segmentation linear in the
+    length of the text.
 
     clause, when given, is (group_start, first_clause_min_chars): soft delimiters
     followed by whitespace also count, if the stripped text from group_start
     through the delimiter is long enough.
     """
-    out: list[_Candidate] = []
     n = len(text)
+    nxt = nxt or _NextSpecial(text)
     i = start
     while i < n:
+        i = nxt(i, clause is not None)  # skip ordinary characters
+        if i >= n:
+            break
         ch = text[i]
         if ch == "\n":
             j = i
             while j < n and _is_ws(text[j]):
                 j += 1
             decided = final or j < n
-            out.append(_Candidate(end=i, decided=decided, boundary=True))
+            yield _Candidate(end=i, decided=decided, boundary=True)
             i = j
             continue
         is_clause = (
@@ -203,7 +240,7 @@ def _candidates(
             # Nothing after the run yet: undecided unless final (end of text is a
             # boundary anyway, so there is nothing to record).
             if not final:
-                out.append(_Candidate(end=end, decided=False, boundary=False))
+                yield _Candidate(end=end, decided=False, boundary=False)
             break
         if not _is_ws(text[j]):
             i = j  # e.g. "3.14", "a.com", "है।राहुल": not a candidate
@@ -212,7 +249,7 @@ def _candidates(
         while k < n and _is_ws(text[k]):
             k += 1
         if k >= n and not final:
-            out.append(_Candidate(end=end, decided=False, boundary=False))
+            yield _Candidate(end=end, decided=False, boundary=False)
             break
         next_char = text[k] if k < n else ""
         boundary = True
@@ -225,9 +262,8 @@ def _candidates(
                 boundary = False
             elif lw in AMBIGUOUS and not ("A" <= next_char <= "Z"):
                 boundary = False
-        out.append(_Candidate(end=end, decided=True, boundary=boundary))
+        yield _Candidate(end=end, decided=True, boundary=boundary)
         i = k
-    return out
 
 
 def _strip(s: str) -> str:
@@ -249,13 +285,16 @@ def _wrap_cut(text: str, start: int, max_chars: int) -> int:
     """Where to cut the window text[start:start+max_chars]; returns an index > start."""
     window_end = start + max_chars
     half = start + max_chars // 2
-    for j in range(window_end, half, -1):
-        if text[j - 1] in SOFT_DELIMITERS:
-            return j
-    for j in range(window_end, start, -1):
-        # Cut before the whitespace; never produce an empty piece.
-        if _is_ws(text[j - 1]) and _strip(text[start : j - 1]):
-            return j - 1
+    # The reference walks the window back one character at a time; finding the
+    # last delimiter and the last whitespace with str.rfind gives the same cut.
+    delimiter = max(text.rfind(d, half, window_end) for d in SOFT_DELIMITERS)
+    if delimiter >= 0:
+        return delimiter + 1
+    space = max(text.rfind(w, start, window_end) for w in WHITESPACE)
+    # Cut before the whitespace; never produce an empty piece. If everything before
+    # the last whitespace is whitespace, so is everything before any earlier one.
+    if space > start and _strip(text[start:space]):
+        return space
     # Hard cut. Never cut before a combining mark or a joiner, or right after a
     # virama or a joiner, which would split an Indic conjunct or a cluster.
     cut = window_end
@@ -269,6 +308,11 @@ def _wrap_cut(text: str, start: int, max_chars: int) -> int:
     return cut if cut > start + 1 else window_end
 
 
+# Every word an exception looks for is at most 6 characters ("approx"), so any
+# word of this many characters or more is decided the same way, whatever its length.
+_LOOKBEHIND_WORD = 8
+
+
 def _keep_from(text: str, gs: int) -> int:
     """How much text before the group start a streaming segmenter must keep.
 
@@ -277,10 +321,18 @@ def _keep_from(text: str, gs: int) -> int:
     the start of a line. Keeping the word the group starts in, the spaces or tabs
     before it and one more character gives both the answer they would have on the
     whole text.
+
+    Unlike the reference, at most `_LOOKBEHIND_WORD` characters of that word are
+    kept: a longer word matches no exception (and is no 1-3 digit list marker)
+    however much of it is kept, and the cap keeps streaming linear when a long
+    run of word characters (no spaces) is wrapped piece by piece.
     """
     i = gs
-    while i > 0 and _is_word_char(text[i - 1]):
+    floor = max(0, gs - _LOOKBEHIND_WORD)
+    while i > floor and _is_word_char(text[i - 1]):
         i -= 1
+    if i > 0 and _is_word_char(text[i - 1]):
+        return i  # the word goes on: what is kept already decides like all of it
     while i > 0 and text[i - 1] in (" ", "\t"):
         i -= 1
     return i - 1 if i > 0 else 0
@@ -290,24 +342,30 @@ class Segmenter:
     """Streaming segmenter. `push` returns the sentences that are now final;
     `flush` returns the rest. Batch splitting is `push(text) + flush()`."""
 
+    # Skipping drains that cannot emit anything is an optimisation only; tests turn
+    # it off to check that it never delays a sentence.
+    _skip_idle = True
+
     def __init__(self, options: Options | None = None) -> None:
         self.opts = options or Options()
         self._buf = ""
         self._gs = 0  # where the current group starts in _buf; before it is look-behind only
         self._first = True
         self._wrapping = False  # inside a wrapped group: no merging until it ends
-        # Whether the last drain left a candidate that more text could decide. While
-        # it did not, a push without any candidate character cannot emit anything
-        # unless the buffer outgrows max_chars, so the rescan is skipped. Skipping
-        # a drain is always safe: the result does not depend on how text is cut.
-        self._open_candidate = False
+        # Whether the last drain stopped at an undecided candidate. While it did not,
+        # a push without any candidate character cannot emit anything unless the
+        # group outgrows max_chars: decided candidates keep their verdict, and only
+        # a new candidate can end a group. So the rescan is skipped. A skipped drain
+        # never changes the result, which does not depend on how text is cut.
+        self._undecided = False
 
     def push(self, text: str) -> list[str]:
         if not text:
             return []
         self._buf += text
         if (
-            not self._open_candidate
+            self._skip_idle
+            and not self._undecided
             and len(self._buf) - self._gs <= self.opts.max_chars
             and _CANDIDATE_CHARS.isdisjoint(text)
         ):
@@ -320,7 +378,7 @@ class Segmenter:
         self._gs = 0
         self._first = True
         self._wrapping = False
-        self._open_candidate = False
+        self._undecided = False
         return out
 
     def _min(self) -> int:
@@ -337,16 +395,21 @@ class Segmenter:
         o = self.opts
         out: list[str] = []
         text = self._buf
+        nxt = _NextSpecial(text)
         gs = _skip_ws(text, self._gs)  # group start
-        cands: list[_Candidate] = []
+        undecided = False
         while True:
             clause = (
                 (gs, o.first_clause_min_chars) if (o.eager_first_clause and self._first) else None
             )
-            cands = _candidates(text, gs, final, clause)
             emitted = False
-            for c in cands:
+            undecided = False
+            first_open: int | None = None  # the first candidate that is a boundary or undecided
+            for c in _candidates(text, gs, final, clause, nxt):
+                if first_open is None and (not c.decided or c.boundary):
+                    first_open = c.end
                 if not c.decided:
+                    undecided = True
                     break
                 if not c.boundary:
                     continue
@@ -367,11 +430,11 @@ class Segmenter:
             # No boundary closes a group of acceptable size. Wrap if the group is
             # certainly longer than max_chars.
             limit = gs + o.max_chars
-            first_open = next((c.end for c in cands if not c.decided or c.boundary), None)
-            certainly_long = (first_open is None or first_open > limit) and len(text) > limit
-            if final and len(_strip(text[gs:])) > o.max_chars:
-                certainly_long = True
-            if certainly_long and len(_strip(text[gs:])) > o.max_chars:
+            # The stripped rest is longer than max_chars exactly when something
+            # other than whitespace lies at or beyond `limit` (gs is not whitespace).
+            long_rest = _skip_ws(text, limit) < len(text)
+            certainly_long = long_rest and (final or first_open is None or first_open > limit)
+            if certainly_long:
                 cut = _wrap_cut(text, gs, o.max_chars)
                 self._emit(out, _strip(text[gs:cut]))
                 self._wrapping = True
@@ -381,12 +444,7 @@ class Segmenter:
                 self._emit(out, _strip(text[gs:]))
                 gs = len(text)
             break
-        # Any candidate left means more text can change the outcome: an undecided
-        # one waits for its next character, and a decided boundary that did not
-        # close a group (too short, or punctuation only) is reconsidered once a
-        # later boundary lets the group grow. The eager first clause also counts
-        # soft delimiters, which `_CANDIDATE_CHARS` covers.
-        self._open_candidate = bool(cands)
+        self._undecided = undecided
         keep = _keep_from(text, gs)
         self._buf = text[keep:]
         self._gs = gs - keep

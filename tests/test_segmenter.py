@@ -6,6 +6,7 @@ import functools
 import json
 import random
 import sys
+import time
 import types
 from pathlib import Path
 from typing import Any
@@ -186,3 +187,57 @@ def test_matches_the_reference_on_random_text(seed: int) -> None:
         assert split_sentences(text, options) == expected, (text, raw)
         cuts = sorted(rng.sample(range(1, len(text)), k=min(len(text) - 1, 8))) if text else []
         assert _streamed(text, cuts, options) == expected, (text, raw, cuts)
+
+
+@pytest.mark.parametrize("seed", range(30))
+def test_skipped_drains_never_delay_a_sentence(seed: int) -> None:
+    """Each push releases exactly what a full rescan would release at that point."""
+    rng = random.Random(1000 + seed)
+    options = Options(
+        min_chars=rng.choice([0, 5, 20]),
+        max_chars=rng.choice([5, 10, 40, 400]),
+        eager_first_clause=rng.random() < 0.5,
+        first_clause_min_chars=rng.choice([3, 24]),
+    )
+    for _ in range(20):
+        text = "".join(rng.choice(_ALPHABET) for _ in range(rng.randint(0, 120)))
+        lazy, eager = Segmenter(options), Segmenter(options)
+        eager._skip_idle = False
+        start = 0
+        for cut in (
+            sorted(rng.sample(range(1, len(text)), k=min(len(text) - 1, 10))) if text else []
+        ):
+            assert lazy.push(text[start:cut]) == eager.push(text[start:cut]), (text, cut)
+            start = cut
+        assert lazy.push(text[start:]) == eager.push(text[start:])
+        assert lazy.flush() == eager.flush()
+
+
+LONG_TEXTS = {
+    "no punctuation, no spaces": "क" * 200_000,
+    "words, no punctuation": "शब्द " * 40_000,
+    "sentences": "यह एक वाक्य है। " * 12_500,
+    "mixed": "Dr. Sharma ने कहा, 3.14 ठीक है। " * 6_452,
+}
+
+
+@pytest.mark.parametrize("name", list(LONG_TEXTS))
+def test_segmentation_is_linear(name: str) -> None:
+    """BEHAVIOR.md §7: 200,000 characters in well under a second, whole or streamed."""
+    text = LONG_TEXTS[name]
+    started = time.perf_counter()
+    whole = split_sentences(text)
+    assert time.perf_counter() - started < 0.5
+    assert whole
+
+    # Streamed in LLM-sized tokens, each push costs a few microseconds whatever came
+    # before it; a rescan of the text so far would take minutes here.
+    part = text[:50_000]
+    started = time.perf_counter()
+    seg = Segmenter()
+    streamed: list[str] = []
+    for i in range(0, len(part), 3):
+        streamed += seg.push(part[i : i + 3])
+    streamed += seg.flush()
+    assert time.perf_counter() - started < 1.0
+    assert streamed == split_sentences(part)
