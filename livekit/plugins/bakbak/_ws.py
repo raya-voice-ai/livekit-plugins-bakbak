@@ -305,12 +305,6 @@ class WSClient:
             except APIError as e:
                 self._note_failure(e)
                 raise
-            except Exception as e:
-                # Anything else (a closed aiohttp session, an invalid URL, ...) must
-                # still fail the requests waiting for this socket, never strand them.
-                error = APIConnectionError(f"Could not connect to the Bakbak API: {e}")
-                self._note_failure(error)
-                raise error from e
             sock = _Socket(ws)
             sock.reader = asyncio.create_task(self._read(sock))
             sock.writer = asyncio.create_task(self._write(sock))
@@ -338,6 +332,7 @@ class WSClient:
             self._failures += 1
 
     async def _handshake(self) -> aiohttp.ClientWebSocketResponse[Any]:
+        failure: APIError
         try:
             return await self._session().ws_connect(
                 self._url,
@@ -349,9 +344,16 @@ class WSClient:
         except aiohttp.WSServerHandshakeError as e:
             # aiohttp drops the refusal's body, so only its status and headers are known.
             request_id = e.headers.get("X-Request-Id") if e.headers else None
-            raise _errors.status_error(e.status, None, request_id=request_id) from e
-        except (aiohttp.ClientError, OSError) as e:
-            raise APIConnectionError("Could not connect to the Bakbak API.") from e
+            failure = _errors.detached(
+                _errors.status_error(e.status, None, request_id=request_id), e
+            )
+        except Exception as e:
+            # aiohttp and OS errors, and anything else (the RuntimeError of a closed
+            # session): the requests waiting for this socket must get an outcome.
+            failure = _errors.detached(
+                APIConnectionError("Could not connect to the Bakbak API."), e
+            )
+        raise failure  # outside the except block: see _errors.detached
 
     async def _prewarm(self) -> None:
         try:

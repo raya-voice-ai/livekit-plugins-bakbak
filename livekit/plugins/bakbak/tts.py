@@ -21,6 +21,7 @@ import json
 import os
 import platform
 import secrets
+import unicodedata
 import weakref
 from collections.abc import AsyncIterable, AsyncIterator, Callable, Mapping
 from dataclasses import dataclass, field, replace
@@ -29,7 +30,6 @@ from typing import Any
 import aiohttp
 from livekit.agents import (
     DEFAULT_API_CONNECT_OPTIONS,
-    APIConnectionError,
     APIConnectOptions,
     APIError,
     tokenize,
@@ -82,7 +82,7 @@ class Voice:
 
 @dataclass
 class _TTSOptions:
-    api_key: str
+    api_key: str = field(repr=False)  # never in a repr or a log (BEHAVIOR.md §8)
     base_url: str
     voice_id: str
     language: str
@@ -166,6 +166,12 @@ class TTS(tts.TTS):  # pyright: ignore[reportMissingTypeArgument]  # no events o
             raise ValueError(
                 "A Bakbak API key is required: pass api_key=... or set the BAKBAK_API_KEY "
                 "environment variable"
+            )
+        if any(ch.isspace() or unicodedata.category(ch)[0] == "C" for ch in resolved_key):
+            # Said without echoing the key (BEHAVIOR.md §8).
+            raise ValueError(
+                "The Bakbak API key contains whitespace or control characters: check "
+                "api_key or the BAKBAK_API_KEY environment variable"
             )
         if sample_rate not in SUPPORTED_SAMPLE_RATES:
             raise ValueError(
@@ -428,8 +434,6 @@ class _Attempt:
             if self.pushed_audio:
                 _errors.after_audio(e)
             raise
-        except aiohttp.ClientError as e:
-            raise APIConnectionError(retryable=not self.pushed_audio) from e
 
     def _sent(self) -> None:
         if not self.sent_any:

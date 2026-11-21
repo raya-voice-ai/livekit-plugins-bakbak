@@ -73,6 +73,7 @@ async def stream_sse(
     """
     result = SSEResult(request_id=None, audio_bytes=0, chunks=0)
     responded = False
+    failure: APIError
     try:
         async with session.post(
             url,
@@ -107,13 +108,17 @@ async def stream_sse(
     except asyncio.TimeoutError as e:
         raise APITimeoutError(retryable=result.audio_bytes == 0) from e
     except (aiohttp.ClientError, OSError) as e:
-        if responded:
-            raise _errors.interrupted(
+        broken = (
+            _errors.interrupted(
                 "The audio stream broke off.",
                 request_id=result.request_id,
                 audio_delivered=result.audio_bytes > 0,
-            ) from e
-        raise APIConnectionError("Could not reach the Bakbak API.") from e
+            )
+            if responded
+            else APIConnectionError("Could not reach the Bakbak API.")
+        )
+        failure = _errors.detached(broken, e)
+    raise failure  # outside the except block, so the cause is all it carries
 
 
 def _on_event(payload: str, result: SSEResult, on_audio: AudioSink) -> bool:
@@ -188,6 +193,8 @@ async def fetch_voices(
     session: aiohttp.ClientSession, url: str, *, headers: Mapping[str, str], timeout: float
 ) -> list[dict[str, Any]]:
     """GET the voice catalog; returns its ``voices`` entries."""
+    body: object = None
+    failure: APIError | None = None
     try:
         async with session.get(
             url,
@@ -208,7 +215,9 @@ async def fetch_voices(
     except asyncio.TimeoutError as e:
         raise APITimeoutError() from e
     except (aiohttp.ClientError, OSError) as e:
-        raise APIConnectionError("The connection to the Bakbak API failed.") from e
+        failure = _errors.detached(APIConnectionError("Could not reach the Bakbak API."), e)
+    if failure is not None:
+        raise failure  # outside the except block, so the cause is all it carries
 
     voices = body.get("voices") if isinstance(body, dict) else None
     if not isinstance(voices, list):

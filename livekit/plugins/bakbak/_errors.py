@@ -26,6 +26,7 @@ from collections.abc import Mapping
 from http import HTTPStatus
 from typing import Any
 
+import aiohttp
 from livekit.agents import APIConnectionError, APIError, APIStatusError
 
 _RETRYABLE_STATUSES = frozenset({408, 429, 500, 502, 503, 504})
@@ -155,6 +156,31 @@ def interrupted(message: str, *, request_id: str | None, audio_delivered: bool) 
         return APIStatusError(message, status_code=-1, request_id=request_id, retryable=False)
     suffix = f" (request {request_id})" if request_id else ""
     return APIConnectionError(f"{message.rstrip('.')}{suffix}.", retryable=True)
+
+
+def detached(error: APIError, cause: BaseException) -> APIError:
+    """`error`, caused by `cause`, with nothing reachable from it that holds the key.
+
+    aiohttp's response errors keep the request they answer (``request_info``),
+    headers and all, so ``X-API-Key`` would be reachable from the error's
+    ``__cause__``. Such a cause is dropped; any other is kept for debugging.
+    Raise the result outside the ``except`` block that caught `cause`: inside it,
+    Python records the handled exception as ``__context__`` regardless.
+    """
+    error.__cause__ = None if _holds_request(cause) else cause
+    error.__suppress_context__ = True
+    return error
+
+
+def _holds_request(error: BaseException) -> bool:
+    seen: set[int] = set()
+    current: BaseException | None = error
+    while current is not None and id(current) not in seen:
+        if isinstance(current, aiohttp.ClientResponseError) or hasattr(current, "request_info"):
+            return True
+        seen.add(id(current))
+        current = current.__cause__ or current.__context__
+    return False
 
 
 def is_draining_signal(event: Mapping[str, Any]) -> bool:
