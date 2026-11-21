@@ -73,6 +73,33 @@ _FATAL_CLOSE_CODES = frozenset({1008, 1009})
 Sleep = Callable[[float], Awaitable[None]]
 
 
+class _Redirected(Exception):
+    """The upgrade request was answered with a redirect, which is never followed."""
+
+    def __init__(self, status: int, request_id: str | None) -> None:
+        super().__init__(status)
+        self.status = status
+        self.request_id = request_id
+
+
+async def _refuse_redirect(
+    _session: aiohttp.ClientSession, _ctx: object, params: aiohttp.TraceRequestRedirectParams
+) -> None:
+    # Called before aiohttp follows the redirect, so the key never leaves for the
+    # other origin (BEHAVIOR.md §8: never follow redirects).
+    response = params.response
+    request_id = response.headers.get("X-Request-Id")
+    response.close()
+    raise _Redirected(response.status, request_id)
+
+
+# aiohttp's ws_connect cannot be told not to follow redirects, and on a hop to
+# another origin it drops Authorization but keeps X-API-Key: the handshake runs on
+# a session whose trace stops any redirect.
+_NO_REDIRECTS = aiohttp.TraceConfig()
+_NO_REDIRECTS.on_request_redirect.append(_refuse_redirect)
+
+
 def backoff(retry: int) -> float:
     """The wait before retry `retry` (1-based), BEHAVIOR.md §4.3."""
     return min(0.5 * 2 ** (retry - 1), 8.0) * (1 - 0.25 * random.random())
@@ -208,6 +235,7 @@ class WSClient:
         self._contexts: dict[str, WSContext] = {}
         self._all: weakref.WeakSet[WSContext] = weakref.WeakSet()  # for aclose()
         self._opening: asyncio.Task[_Socket] | None = None
+        self._handshake_session: aiohttp.ClientSession | None = None
         self._background: set[asyncio.Task[Any]] = set()
         # Consecutive abnormal closes (with requests to resend) and failed
         # reconnects. Reset by any message from the server.
@@ -258,6 +286,8 @@ class WSClient:
         await asyncio.gather(*tasks, return_exceptions=True)
         await asyncio.gather(*(self._close_socket(s) for s in list(self._sockets)))
         self._socket = None
+        if self._handshake_session is not None:
+            await self._handshake_session.close()
 
     # -- sockets ------------------------------------------------------------
 
@@ -340,16 +370,40 @@ class WSClient:
         if self._failures:
             self._failures += 1
 
+    def _session_for_handshake(self) -> aiohttp.ClientSession:
+        """A session that refuses redirects, sharing the given session's connections."""
+        base = self._session()
+        if base.closed or base.connector is None:
+            raise RuntimeError("Session is closed")
+        session = self._handshake_session
+        if session is None or session.closed or session.connector is not base.connector:
+            if session is not None and not session.closed:
+                self._spawn(session.close())
+            session = self._handshake_session = aiohttp.ClientSession(
+                connector=base.connector,
+                connector_owner=False,  # the given session owns, and closes, the connections
+                trust_env=base.trust_env,
+                trace_configs=[_NO_REDIRECTS],
+            )
+        return session
+
     async def _handshake(self) -> aiohttp.ClientWebSocketResponse[Any]:
         failure: APIError
         try:
-            return await self._session().ws_connect(
+            base = self._session()
+            return await self._session_for_handshake().ws_connect(
                 self._url,
                 headers=self._headers,
                 autoping=False,  # pings are answered by the reader, which also notes them
                 compress=0,
                 max_msg_size=_MAX_MESSAGE_SIZE,
+                # The proxy LiveKit configures on its shared session (aiohttp 3.11+).
+                proxy=getattr(base, "_default_proxy", None),
+                proxy_auth=getattr(base, "_default_proxy_auth", None),
             )
+        except _Redirected as e:
+            # A 3xx is reported with its status and never retried (BEHAVIOR.md §8).
+            failure = _errors.status_error(e.status, None, request_id=e.request_id)
         except aiohttp.WSServerHandshakeError as e:
             # aiohttp drops the refusal's body, so only its status and headers are known.
             request_id = e.headers.get("X-Request-Id") if e.headers else None

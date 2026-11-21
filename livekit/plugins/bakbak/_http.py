@@ -81,6 +81,7 @@ async def stream_sse(
             headers=headers,
             timeout=aiohttp.ClientTimeout(total=None, sock_connect=timeout, sock_read=timeout),
             read_bufsize=_READ_BUFSIZE,
+            allow_redirects=False,  # a redirect would take X-API-Key elsewhere (§8)
         ) as resp:
             responded = True
             result.request_id = resp.headers.get("X-Request-Id")
@@ -208,6 +209,7 @@ async def fetch_voices(
             url,
             headers=headers,
             timeout=aiohttp.ClientTimeout(total=None, sock_connect=timeout, sock_read=timeout),
+            allow_redirects=False,  # a redirect would take X-API-Key elsewhere (§8)
         ) as resp:
             raw = await resp.read()
             body = _parse_body(raw)
