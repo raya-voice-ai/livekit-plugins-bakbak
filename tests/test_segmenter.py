@@ -14,7 +14,13 @@ from typing import Any
 import pytest
 
 from livekit.plugins.bakbak import SentenceTokenizer
-from livekit.plugins.bakbak._segmenter import MAX_CHARS_LIMIT, Options, Segmenter, split_sentences
+from livekit.plugins.bakbak._segmenter import (
+    MAX_CHARS_LIMIT,
+    Options,
+    Segmenter,
+    _lookbehind,
+    split_sentences,
+)
 
 CASES_FILE = Path(__file__).parent.parent / "conformance" / "segmenter" / "cases.json"
 CASES: dict[str, Any] = json.loads(CASES_FILE.read_text(encoding="utf-8"))
@@ -165,6 +171,15 @@ _ALPHABET = [
     "\n2. ",
     "abcdefghi",
     "12.",
+    # Long unbroken words and long runs of blanks, which the streaming look-behind
+    # compresses (BEHAVIOR.md §7), and the less common whitespace characters.
+    "क" * 25,
+    "abcdefghijklmnop.",
+    "1234567.",
+    " " * 30,
+    "\t \t  \t",
+    "\n" + " " * 12 + "4. ",
+    *"\r\x0b\x85\u2028\u3000",
 ]
 
 
@@ -186,7 +201,35 @@ def test_matches_the_reference_on_random_text(seed: int) -> None:
         expected = reference.split_sentences(text, ref_options)
         assert split_sentences(text, options) == expected, (text, raw)
         cuts = sorted(rng.sample(range(1, len(text)), k=min(len(text) - 1, 8))) if text else []
-        assert _streamed(text, cuts, options) == expected, (text, raw, cuts)
+        # Push by push, not just in total: each sentence is released when the
+        # reference releases it.
+        ours, theirs = Segmenter(options), reference.Segmenter(ref_options)
+        start = 0
+        for cut in [*cuts, len(text)]:
+            piece = text[start:cut]
+            assert ours.push(piece) == theirs.push(piece), (text, raw, cuts, cut)
+            start = cut
+        assert ours.flush() == theirs.flush(), (text, raw, cuts)
+
+
+def test_lookbehind_matches_the_reference() -> None:
+    reference = _reference()
+    rng = random.Random(7)
+    pieces = [
+        *("क" * n for n in (1, 3, 7, 8, 9, 20)),
+        " ",
+        "   ",
+        "\t",
+        "\n",
+        "ab",
+        "12",
+        ".",
+        "डॉ",
+    ]
+    for _ in range(5000):
+        text = "".join(rng.choice(pieces) for _ in range(rng.randint(1, 12)))
+        gs = rng.randint(0, len(text))
+        assert _lookbehind(text, gs) == reference._lookbehind(text, gs), (text, gs)
 
 
 @pytest.mark.parametrize("seed", range(30))
@@ -218,6 +261,8 @@ LONG_TEXTS = {
     "words, no punctuation": "शब्द " * 40_000,
     "sentences": "यह एक वाक्य है। " * 12_500,
     "mixed": "Dr. Sharma ने कहा, 3.14 ठीक है। " * 6_452,
+    "long runs of spaces": ("एक" + " " * 998) * 200,
+    "long runs of tabs after sentences": ("एक।" + "\t" * 997) * 200,
 }
 
 

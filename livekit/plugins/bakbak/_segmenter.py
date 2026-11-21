@@ -86,6 +86,10 @@ AMBIGUOUS = frozenset(
 # of these can still decide an earlier candidate or trigger wrapping, which
 # `Segmenter.push` checks separately.
 _CANDIDATE_CHARS = TERMINATORS | SOFT_DELIMITERS | {"\n"}
+# Whitespace that is not a newline: pushing only these can change no decision. A
+# candidate is decided by the first non-whitespace character after it, no
+# candidate starts with one, and none is text beyond the wrap limit.
+_BLANK = WHITESPACE - {"\n"}
 
 
 @dataclass(frozen=True)
@@ -211,8 +215,7 @@ def _candidates(
         ch = text[i]
         if ch == "\n":
             j = i
-            while j < n and _is_ws(text[j]):
-                j += 1
+            j = _skip_ws(text, j)
             decided = final or j < n
             yield _Candidate(end=i, decided=decided, boundary=True)
             i = j
@@ -246,8 +249,7 @@ def _candidates(
             i = j  # e.g. "3.14", "a.com", "है।राहुल": not a candidate
             continue
         k = j
-        while k < n and _is_ws(text[k]):
-            k += 1
+        k = _skip_ws(text, k)
         if k >= n and not final:
             yield _Candidate(end=end, decided=False, boundary=False)
             break
@@ -275,10 +277,13 @@ def _strip(s: str) -> str:
     return s[a:b]
 
 
+_NOT_WS = re.compile("[^" + "".join(re.escape(c) for c in sorted(WHITESPACE)) + "]")
+
+
 def _skip_ws(text: str, i: int) -> int:
-    while i < len(text) and _is_ws(text[i]):
-        i += 1
-    return i
+    """The first index at or after i that is not whitespace (len(text) if none)."""
+    m = _NOT_WS.search(text, i)
+    return m.start() if m else len(text)
 
 
 def _wrap_cut(text: str, start: int, max_chars: int) -> int:
@@ -308,34 +313,35 @@ def _wrap_cut(text: str, start: int, max_chars: int) -> int:
     return cut if cut > start + 1 else window_end
 
 
-# Every word an exception looks for is at most 6 characters ("approx"), so any
-# word of this many characters or more is decided the same way, whatever its length.
+# The longest word any rule compares (TITLES, AMBIGUOUS, list-marker digits) has
+# 6 code points, so 8 code points of a word are enough to know it is none of them.
 _LOOKBEHIND_WORD = 8
 
 
-def _keep_from(text: str, gs: int) -> int:
-    """How much text before the group start a streaming segmenter must keep.
+def _lookbehind(text: str, gs: int) -> str:
+    """The text a streaming segmenter keeps before the group start.
 
     Two decisions look behind the group start: the word before a "." (which,
     after a hard cut, began before the group) and whether a list marker sits at
-    the start of a line. Keeping the word the group starts in, the spaces or tabs
-    before it and one more character gives both the answer they would have on the
-    whole text.
-
-    Unlike the reference, at most `_LOOKBEHIND_WORD` characters of that word are
-    kept: a longer word matches no exception (and is no 1-3 digit list marker)
-    however much of it is kept, and the cap keeps streaming linear when a long
-    run of word characters (no spaces) is wrapped piece by piece.
+    the start of a line. They need only the last few characters of that word and,
+    when the word is short, what precedes it: a run of spaces or tabs (one stands
+    for any number) and the character before the run, or nothing at the start of
+    the text. Keeping exactly that bounds the buffer however long the text is
+    and gives every decision the answer it would have on the whole text. The
+    kept text is never emitted, so it need not be a slice of the input.
     """
-    i = gs
-    floor = max(0, gs - _LOOKBEHIND_WORD)
-    while i > floor and _is_word_char(text[i - 1]):
-        i -= 1
-    if i > 0 and _is_word_char(text[i - 1]):
-        return i  # the word goes on: what is kept already decides like all of it
+    w = gs
+    floor = max(0, gs - _LOOKBEHIND_WORD)  # the reference walks the whole word; this
+    while w > floor and _is_word_char(text[w - 1]):  # stops at 8, with the same result
+        w -= 1
+    if gs - w >= _LOOKBEHIND_WORD:
+        return text[gs - _LOOKBEHIND_WORD : gs]
+    i = w
     while i > 0 and text[i - 1] in (" ", "\t"):
         i -= 1
-    return i - 1 if i > 0 else 0
+    gap = " " if i < w else ""
+    before = text[i - 1] if i > 0 else ""
+    return before + gap + text[w:gs]
 
 
 class Segmenter:
@@ -349,6 +355,10 @@ class Segmenter:
     def __init__(self, options: Options | None = None) -> None:
         self.opts = options or Options()
         self._buf = ""
+        # Pushed text not yet in _buf: joined only when a drain runs, so a push that
+        # skips the drain costs nothing however large the buffer has grown.
+        self._tail: list[str] = []
+        self._len = 0  # len(_buf) plus the tail
         self._gs = 0  # where the current group starts in _buf; before it is look-behind only
         self._first = True
         self._wrapping = False  # inside a wrapped group: no merging until it ends
@@ -362,12 +372,15 @@ class Segmenter:
     def push(self, text: str) -> list[str]:
         if not text:
             return []
-        self._buf += text
-        if (
-            self._skip_idle
-            and not self._undecided
-            and len(self._buf) - self._gs <= self.opts.max_chars
-            and _CANDIDATE_CHARS.isdisjoint(text)
+        self._tail.append(text)
+        self._len += len(text)
+        if self._skip_idle and (
+            _BLANK.issuperset(text)
+            or (
+                not self._undecided
+                and self._len - self._gs <= self.opts.max_chars
+                and _CANDIDATE_CHARS.isdisjoint(text)
+            )
         ):
             return []
         return self._drain(final=False)
@@ -375,6 +388,7 @@ class Segmenter:
     def flush(self) -> list[str]:
         out = self._drain(final=True)
         self._buf = ""
+        self._len = 0
         self._gs = 0
         self._first = True
         self._wrapping = False
@@ -394,6 +408,9 @@ class Segmenter:
     def _drain(self, final: bool) -> list[str]:
         o = self.opts
         out: list[str] = []
+        if self._tail:
+            self._buf += "".join(self._tail)
+            self._tail.clear()
         text = self._buf
         nxt = _NextSpecial(text)
         gs = _skip_ws(text, self._gs)  # group start
@@ -445,9 +462,10 @@ class Segmenter:
                 gs = len(text)
             break
         self._undecided = undecided
-        keep = _keep_from(text, gs)
-        self._buf = text[keep:]
-        self._gs = gs - keep
+        context = _lookbehind(text, gs)
+        self._buf = context + text[gs:]
+        self._len = len(self._buf)
+        self._gs = len(context)
         return out
 
 
