@@ -1,0 +1,104 @@
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "livekit-plugins-bakbak"
+version = "1.0.0rc1"
+description = "LiveKit Agents plugin for Bakbak text-to-speech: low-latency streaming speech for Indian languages."
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+authors = [{ name = "Raya Voice AI", email = "support@getraya.app" }]
+keywords = [
+    "livekit",
+    "livekit-agents",
+    "tts",
+    "text-to-speech",
+    "voice",
+    "realtime",
+    "bakbak",
+    "raya",
+    "indic",
+    "hindi",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Typing :: Typed",
+]
+dependencies = ["livekit-agents>=1.8.7,<2", "aiohttp>=3.10,<4"]
+
+[project.optional-dependencies]
+# Only for examples/agent.py: speech-to-text and the LLM.
+examples = ["livekit-agents[deepgram,openai]>=1.8.7,<2"]
+
+[project.urls]
+Homepage = "https://getraya.app/"
+Documentation = "https://github.com/raya-voice-ai/livekit-plugins-bakbak#readme"
+Source = "https://github.com/raya-voice-ai/livekit-plugins-bakbak"
+Changelog = "https://github.com/raya-voice-ai/livekit-plugins-bakbak/blob/main/CHANGELOG.md"
+Issues = "https://github.com/raya-voice-ai/livekit-plugins-bakbak/issues"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.25",
+    "ruff>=0.8",
+    "pyright>=1.1.390",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["livekit"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/livekit", "/README.md", "/CHANGELOG.md", "/LICENSE"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+markers = [
+    "live: talks to a real Bakbak deployment (needs BAKBAK_API_KEY and BAKBAK_BASE_URL); spends credits",
+]
+addopts = "-m 'not live'"
+filterwarnings = ["error::pytest.PytestUnraisableExceptionWarning"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+extend-exclude = ["conformance"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF", "ASYNC", "PT", "C4", "PIE", "RET"]
+ignore = ["RUF001", "RUF002", "RUF003"]  # Devanagari and typographic punctuation are intended
+
+[tool.ruff.lint.per-file-ignores]
+# Kept branch for branch parallel to conformance/segmenter/reference.py.
+"livekit/plugins/bakbak/_segmenter.py" = ["SIM114"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["livekit.plugins.bakbak"]
+
+[tool.pyright]
+include = ["livekit", "tests", "examples"]
+exclude = ["conformance", "**/.venv"]
+venvPath = "."
+venv = ".venv"
+pythonVersion = "3.10"
+typeCheckingMode = "strict"
+reportMissingTypeStubs = false
+reportUnknownMemberType = false
+reportUnknownArgumentType = false
+reportUnknownVariableType = false
+reportPrivateUsage = false
