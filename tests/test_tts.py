@@ -666,6 +666,22 @@ async def test_list_voices(fake: FakeBakbak, session: aiohttp.ClientSession) -> 
         ("en-GB", "en"),
         ("ta-IN", "ta"),
         ("or", "or"),
+        # Every language's English name (review: "assamese" and "bangla" were passed on).
+        ("hindi", "hi"),
+        ("Marathi", "mr"),
+        ("telugu", "te"),
+        ("kannada", "kn"),
+        ("bengali", "bn"),
+        ("Bangla", "bn"),
+        ("assamese", "as"),
+        ("ASSAMESE", "as"),
+        ("gujarati", "gu"),
+        ("nepali", "ne"),
+        ("malayalam", "ml"),
+        ("tamil", "ta"),
+        ("punjabi", "pa"),
+        ("panjabi", "pa"),
+        ("English", "en"),
     ],
 )
 def test_language_codes(given: str, sent: str) -> None:

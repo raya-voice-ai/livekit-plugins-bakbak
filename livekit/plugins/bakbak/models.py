@@ -62,6 +62,25 @@ DEFAULT_VOICE_ID = "009ae8b5-4a03-492d-af1c-3055989ac734"
 
 _KNOWN_LANGUAGES: frozenset[str] = frozenset(TTSLanguages.__args__)
 
+# English names of the API's languages, including the ones LiveKit's LanguageCode
+# does not know ("assamese") and common alternatives ("bangla").
+_LANGUAGE_NAMES = {
+    "hindi": "hi",
+    "marathi": "mr",
+    "telugu": "te",
+    "kannada": "kn",
+    "bengali": "bn",
+    "bangla": "bn",
+    "assamese": "as",
+    "gujarati": "gu",
+    "nepali": "ne",
+    "malayalam": "ml",
+    "tamil": "ta",
+    "punjabi": "pa",
+    "panjabi": "pa",
+    "english": "en",
+}
+
 
 def normalize_language(language: str) -> str:
     """Map a language code, BCP-47 tag or language name to the API's code.
@@ -75,6 +94,8 @@ def normalize_language(language: str) -> str:
     lowered = language.strip().lower().replace("_", "-")
     if lowered in _KNOWN_LANGUAGES:
         return lowered
+    if lowered in _LANGUAGE_NAMES:
+        return _LANGUAGE_NAMES[lowered]
     code = LanguageCode(language)
     base = code.language
     if base == "en":
