@@ -1,0 +1,21 @@
+name: Release Please
+
+# Keeps a release pull request up to date from the conventional commits on main;
+# merging it tags the commit and creates the GitHub release, which publish.yml ships.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json

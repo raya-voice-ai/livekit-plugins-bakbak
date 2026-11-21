@@ -1,0 +1,35 @@
+name: Conformance drift
+
+# conformance/ is synced from one canonical copy into every official Bakbak
+# client. This compares our manifest with theirs and warns when they differ.
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  OTHER_CLIENTS: raya-voice-ai/bakbak-python raya-voice-ai/bakbak-js raya-voice-ai/bakbak-mcp
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare manifests
+        run: |
+          for repo in $OTHER_CLIENTS; do
+            url="https://raw.githubusercontent.com/${repo}/main/conformance/MANIFEST.sha256"
+            if ! curl -fsSL "$url" -o theirs.sha256; then
+              echo "::warning title=Conformance drift::Could not fetch the manifest of ${repo}"
+              continue
+            fi
+            if diff -u conformance/MANIFEST.sha256 theirs.sha256; then
+              echo "${repo}: same conformance/ as this repository"
+            else
+              echo "::warning title=Conformance drift::conformance/ differs from ${repo}"
+            fi
+          done

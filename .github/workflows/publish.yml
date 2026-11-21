@@ -1,0 +1,44 @@
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv build
+      - name: The built version is the release's
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          version="$(uv run --no-project --with packaging python -c "from packaging.version import Version; print(Version('$tag'))")"
+          compgen -G "dist/*-${version}[-.]*" > /dev/null || { echo "dist/ does not hold ${version}"; exit 1; }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  pypi:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/livekit-plugins-bakbak
+    permissions:
+      id-token: write  # trusted publishing; no API token is stored
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          attestations: true
