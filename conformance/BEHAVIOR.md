@@ -64,7 +64,10 @@ WebSocket requests add an optional `context_id`: 1–128 characters of
 
 ### Stream response (SSE)
 
-`200`, `text/event-stream`, `X-Request-Id`, plus the `X-Audio-*` headers. Events:
+`200`, `text/event-stream`, `X-Request-Id`, plus the `X-Audio-*` headers when the
+request has an `output_format` (without one the stream is 32-bit float PCM at
+24 kHz and the headers are absent; clients report encoding and sample rate as
+unknown rather than guessing). Events:
 
 ```
 event: chunk
@@ -197,7 +200,9 @@ reason phrase; `"HTTP <status>"`.
 
 Rendering a `detail` list: each entry becomes `<loc>: <msg>`, where `<loc>` is the
 entry's `loc` without a leading `"body"`, joined with `.`; an entry with no `loc`
-is just its `msg`; a string entry is itself; empty renderings are skipped. The
+is just its `msg`; a string entry is itself; an entry with no `msg`, and any empty
+rendering, is skipped. Trailing whitespace of `message` is ignored when checking
+for `.`, `!` or `?`. The
 entries are joined with `"; "`, e.g. `voice_id: Field required;
 output_format.encoding: Value error, …`.
 
@@ -344,9 +349,13 @@ so its read timeout runs from the request to the first byte, then between bytes.
 
 `ctx.cancel()` sends `{"context_id","cancel":true}` and resolves when the
 `cancelled` message arrives. Every unfinished request of the context ends as
-`Cancelled`. The context's audio that was received but not yet handed to the
-caller, and audio that arrives between the cancel and its acknowledgement, is
-discarded, never delivered: a cancel means silence now. The context stays usable: a
+`Cancelled`. All of the context's audio that was received but not yet handed to
+the caller, including audio of requests that had already finished, and audio
+that arrives between the cancel and its acknowledgement, is discarded, never
+delivered: a cancel means silence now. A `send_stream` still feeding the context
+stops: it sends nothing more and returns. Cleanup that sends the cancel must
+still run when the task doing it is itself cancelled (barge-in often lands
+while an error is being handled). The context stays usable: a
 `send` after `cancel()` resolves runs normally. Cancelling a context with nothing
 unfinished resolves at once without sending anything.
 
@@ -359,20 +368,41 @@ flight on two connections at once.
 
 | Event | What the client does |
 |---|---|
-| close 1000 (idle) | Nothing was in progress. Mark closed; the next `send` reconnects. Not an error. |
+| close 1000 (idle) | Nothing was in progress. Mark closed; the next `send` reconnects. Not an error. (Should a 1000 ever arrive with requests unfinished, treat it as 1001.) |
 | close 1001 (going away) | Reconnect at once. Every request with no terminal message and no audio is resent, in its context's order, on the new connection, exactly once. Doesn't count against `max_retries`. |
-| a 503 refusal saying the connection is draining (`error_code` `service_unavailable`, or a message containing "Reconnect and send the request again") | Stop sending on this connection; new contexts go to a new one. The refused request is held, with any later requests of its context, and resent in order on the new connection as soon as the context has nothing unfinished on the draining one (at the latest when it closes with 1001), never retried on the draining one. Doesn't count against `max_retries`. |
+| a **draining refusal**: status 503 and a `message` containing "Reconnect and send the request again" | Stop sending on this connection; new contexts go to a new one. The refused request is held, with any later requests of its context, and resent in order on the new connection as soon as the context has nothing unfinished on the draining one (at the latest when it closes with 1001), never retried on the draining one. The first draining refusal of a request doesn't count against `max_retries`; a second one is handled as an ordinary retryable error (back off per §4.3, count it, resend on a new connection). Once no context is bound to a draining connection, the client closes it (1000) rather than wait for the server. |
 | close 1008 or 1009 | The client broke a rule. Fail every unfinished request with `WebSocketClosedError` (not retryable). |
-| any other close or a dropped socket | Requests that had audio fail with `StreamInterruptedError`; those with none are resent on a new connection. The first reconnect is immediate; later ones back off (§4.3) and count against `max_retries`. |
-| a retryable `error` before any audio, not a draining signal | If no later request of the same context has been sent, wait (§4.3) and resend it on the same context. Otherwise deliver the error: resending would break the context's order. |
+| any other close or a dropped socket | Requests that had audio fail with `StreamInterruptedError`; those with none are resent on a new connection. The first reconnect is immediate; up to `max_retries` more follow with backoff (§4.3), so at most 1 + `max_retries` reconnect attempts before the unfinished requests fail with `WebSocketClosedError`. |
+| a retryable `error` before any audio, not a draining refusal | If no later request of the same context has been sent, wait (§4.3) and resend it on the same context. Otherwise deliver the error: resending would break the context's order. |
+
+`error_code` alone never marks a draining refusal: `service_unavailable` also
+means the service cannot check balances, and treating that as a drain would
+reconnect in a tight loop for as long as the outage lasts.
 
 Nothing ever waits forever: a connection loss delivers an outcome to every
-unfinished request.
+unfinished request, and so does any failure while reconnecting (an exception of
+any kind from the transport fails the waiting requests with
+`APIConnectionError`). Closing a connection never waits more than about one
+second for an unresponsive peer.
+
+A chunk whose `data` is not valid base64 fails its own request as the stream
+breaking at that point (§4.1): `StreamInterruptedError` after audio, otherwise a
+retryable error. It never closes the connection.
 
 ### 6.5 Messages about no request
 
 An `error` with no `context_id` and no `request_id` goes to an optional
 connection-level callback or log, never to a context. It does not close anything.
+
+### 6.6 Resource lifetime
+
+A WebSocket handle may live for days and serve millions of requests. Its memory
+must not grow with the number of requests or contexts it has served: a context
+with nothing unfinished and nothing queued is released from the connection's
+routing table (a later `send` registers it again), and audio is released as soon
+as the caller has taken it, through whichever reader. Timers and background
+readers never keep a process alive on their own once the caller has closed the
+handle (in Node: `unref`).
 
 ---
 
@@ -395,6 +425,16 @@ The segmenter is specified by `conformance/segmenter/reference.py` and tested by
 
 `max_chars` must never exceed 5,000, the API's limit.
 
+Segmentation is linear in the text's length: the reference splits 200,000
+characters, with or without punctuation, in tens of milliseconds, and an
+implementation must not be more than a small constant factor slower (no
+rescanning of the remaining text per sentence). A streaming implementation in a
+UTF-16 language carries a trailing high surrogate over to the next push.
+
+"Speakable" uses Unicode general categories as of Unicode 15.1; characters
+assigned in later versions may be classified differently by different runtimes,
+and the vectors avoid them.
+
 ---
 
 ## 8. Identity, logging, privacy
@@ -407,7 +447,18 @@ The segmenter is specified by `conformance/segmenter/reference.py` and tested by
 - No telemetry and no update checks: the clients never call anything except the
   API base URL they were given.
 - Logs never contain the API key or synthesis text. Debug logs may contain
-  request ids, statuses, timings and sizes.
+  request ids, statuses, timings and sizes. The key never appears in the `repr`
+  or `toString` of a client or options object either.
+- An error never carries the key or request headers anywhere reachable from it,
+  including chained causes (`__cause__`, `__context__`, `cause`) and the
+  third-party exceptions they wrap: drop or sanitise such causes.
+- A key that is empty or contains whitespace or control characters is refused
+  at construction with a `BakbakError` that says so without echoing the key.
+- **Never follow redirects**, on HTTP requests or the WebSocket handshake: the
+  API never redirects, and following one would hand `X-API-Key` (a custom header
+  that `fetch` and several WebSocket libraries keep on cross-origin hops) to
+  another origin. A 3xx is returned to the caller as an `APIStatusError` with its
+  status.
 - The JavaScript SDK refuses to run in a browser with a raw API key unless the
   caller passes `dangerouslyAllowBrowser: true`, and says why: the key would be
   visible to anyone using the page.

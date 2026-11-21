@@ -1,0 +1,232 @@
+{
+ "id": "ws_drain_refused_twice",
+ "description": "A second draining refusal of the same request is an ordinary retryable error: back off, count it, resend on a new connection.",
+ "connections": [
+  {
+   "script": [
+    {
+     "recv": {
+      "text": "रद्द के बाद।",
+      "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+      "model": "m1",
+      "language": "hi",
+      "output_format": {
+       "container": "raw",
+       "encoding": "pcm_mulaw",
+       "sample_rate": 8000
+      },
+      "context_id": "c1"
+     }
+    },
+    {
+     "send": {
+      "type": "error",
+      "status_code": 503,
+      "done": true,
+      "message": "The service is restarting. Reconnect and send the request again.",
+      "error_code": "service_unavailable",
+      "retryable": true,
+      "context_id": "c1",
+      "request_id": "req_closing"
+     }
+    },
+    {
+     "close": {
+      "code": 1001,
+      "reason": "going away"
+     }
+    }
+   ]
+  },
+  {
+   "script": [
+    {
+     "recv": {
+      "text": "रद्द के बाद।",
+      "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+      "model": "m1",
+      "language": "hi",
+      "output_format": {
+       "container": "raw",
+       "encoding": "pcm_mulaw",
+       "sample_rate": 8000
+      },
+      "context_id": "c1"
+     }
+    },
+    {
+     "send": {
+      "type": "error",
+      "status_code": 503,
+      "done": true,
+      "message": "The service is restarting. Reconnect and send the request again.",
+      "error_code": "service_unavailable",
+      "retryable": true,
+      "context_id": "c1",
+      "request_id": "req_closing"
+     }
+    },
+    {
+     "close": {
+      "code": 1001,
+      "reason": "going away"
+     }
+    }
+   ]
+  },
+  {
+   "script": [
+    {
+     "recv": {
+      "text": "रद्द के बाद।",
+      "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+      "model": "m1",
+      "language": "hi",
+      "output_format": {
+       "container": "raw",
+       "encoding": "pcm_mulaw",
+       "sample_rate": 8000
+      },
+      "context_id": "c1"
+     }
+    },
+    {
+     "send": {
+      "type": "chunk",
+      "status_code": 206,
+      "done": false,
+      "data": "/fv8/P3/fX17e3t6ent+fv/9/P37+/79/f59fX17eXp7ent8fHp8fHt6enp6enl5eHh2d3Z3dnd3dnh3d3d4d3d3eHh4d3Z3d3d3d3d5eXl5eXp6eXh4eHZ2eHh2eHl3eHl5d3Z3dXR0dHV0d3d3eHl5eHZ2d3V1dHRzc3R0dHV1dXV1dXV1dnV1dXZ3dnd2eHh5eXl5eHl5eXl7e3t9fXx8fHt7e3t6ent7e3t7e3x8fHt9fHt7fHx7e3t7enx8e3t8fXx9fXx7e3t7e3p5eXh4eHl5eHp7enp7e3t7fHt7fHx7e3t6ent7e3t8fX19/35+fn59fX5+fX1+fn5+fn5+fv9+fn19fXx9fX59fX18fHx7e3p7e3l7enp6e3l5ent6eXp5eHd4eHh4eXh4eXh4eXl5eHl5eXl5enl5enp5eXp5eXl4eHh4eHl4eHh4eXl4eHl5eHh4eHh3eHd2dnZ1dnZ2dnZ3dnZ3dnZ3dnZ2d3Z2dnd3d3d3d3d4d3Z3eHd3d3d3dnd3dnd3eHd4eHd4eXh4eHh4d3d3d3h3d3d2d3d2d3Z2dXV2dnV2dnd3d3Z3d3V1dXR0dXZ1dXZ1dnZ2dXV1dXR0dnV0dXV0dHR1dXV2dnV1dXV0dHR0dHN0dHR0dXV0dHR0c3R0c3Jzc3N0dXR0dHV0dHV2dXR1dXV1dnV1dnd1dXZ2dXR1dHR1dXV1dnV2d3d3d3d3d3h4eXl5eXp6eXp6eXl5eXl6e3x6fH19fX7+///+/v7+/f39+/z8+/v8/Pv6+vr6+Pn59/f49/f3+Pn4+fn4+Pf39vf39vb29vf39vf39/f39/f3+Pj39/f39/f29vb39/f39/f19PT09fb29fX29vb29/b29/b19fX19fb19fX19vb19PT19PT19fX19PTz9PX19PX19fb19fb29vX19vb29/j39/j4+Pf49/f4+Pj3+Pf3+Pn5+Pn6+fn6+vn6+vr7+/v7+/v7+vr6+/v6+/v8+/z9/P38+/z7+vv7+/v7/P39/f38/Pv7+/v7+/v7+/z8/Pz8/Pv8/Pz7/Pz7+/v7+vv7/Pz9/v7+/35+fn59fHx8fH18e3x8fHx8fHt7e3p6e3t6enp5eXp6eXp7enp6enp5eXl5eHl5eXh4eHd4eHh4eHl5eHd2dnV2dnV1dnZ2dnZ3dnZ2dnV1dXV1dHV1dHR0dHR0dHRzdHR0dHV0dXV0dHR0dHR0c3R0dHR0dHR0dXV1dXV1dHRzc3R0c3R0c3NzdHR0dHNzdHR0c3NzcnJzc3Nzc3JycnJxcXFxcXFxcXJycnNzc3Jzc3Nyc3NycnJzc3Nzc3R0dHR0dXZ2dnZ2dnZ2dnZ3d3d3eHl5eXp6ent7e3t7e3t7e3x9fX19fX7//v38/Pz8/fz7/Pz8/Pz8+/v6+vv7+/v7+/r6+fn5+fn5+vv7+vv7/Pz8/Pz8/P39/f39/f3+/v7///7+/v9+//7+/v39/f38/P39/f39/Pz9/Pv7/Pz8/f39/v7//v7+/v7+/35+fn5+fX19fH19fHx8e3t6enl5eXk=",
+      "step_time": 0.01251248992048204,
+      "context_id": "c1",
+      "request_id": "req_6e3147210c8eed72b52c8f37fcf9fd39"
+     }
+    },
+    {
+     "send": {
+      "type": "chunk",
+      "status_code": 206,
+      "done": false,
+      "data": "enp5eXl5eXl6eXp6eXl5eXl5eXl5ent6enl5eHh4eHh3eHh4eHl5eXl4eHh5eHh4eHh3d3d3dnZ2dXV1dXV1dXV1dHR0dHR0c3Nzc3JycnJzcnNycnNzc3JycnJycnJycnFycnJycnNzcnJycnNzc3Nzc3Nzc3Nzc3NycnJzc3Nzc3Jyc3R0dHV0dHR0dHR0dHR0dHR0dHR0dHR1dXV1dXV1dHR0dHV0dHV0dHV1dHR0dHR0dHR0dHRzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nyc3Nyc3Nzc3Nzc3Nzc3N0dHR0dXV1dXV1dXR1dXV1dXV1dnZ2dnZ1dXV2dnd3d3d2dnZ2dnZ2d3d2dnZ2dnd4d3d3d3d3d3d3d3h3d3h4d3d3d3h5eXl5eHh4eHp6ent7e3p6fHt6e3t7fHx7e3t9fXt8fn59fn59fH19ff9+fX5+/v3///3+//z8/vz+fv7+/v39/P3//v37+/v6+/z7/Pz6+Pr7+fb5/vn1+/759/r69/X5+/f3+/j19/n59/X7/Pn3+fn29vb49/b3+vbz9/j19PX5+PX4+/bz9vf39ff49fb19vj49/b29fXz9vf09vXz+Pjz+Pry9/v09PL19/Hz+fP1+PLy8vL39PD18+/y8vT49/n38vL08/Lz9vn09fjz8ff6+fT0+ffx+vfv9vjz8vf8+vX9+PD7/vH19fX17vDy7vT07Pb79Pr7+f7z+nnz9f/6/X75ff72/vTv/f76+/n6fvb69u3v7Ozs6+zu6urv7+3v8+7s+fr9fv1wcnRrb3hveHt3e31+/Xz+6/P05uPk4N7d2trW19va3d/f5/L5eW5qYGJbUE9MSEdFQkVFR01WaOXVy8XEv77BwcDDw8bIx8vMzM7T1+bvX09EPjc2Mi8tLCcmO0I817OvrqyoqrvCv2JCSlF62b2rqKmkpau2wtRONTIwKyotLConKB8ZNVIu4aekpqmgotFM4jYnKjNPQ9uknqOdnKKtubx+NkBMNzM7PTUuMCkeFhMpKx49q6Ojn5iZr8i9PSUfJDEtNLGfo52Zmp+trr4+Mzs3NDRC50U3OywjGg8fKRkn1KykpJqTobKsyi8iHyooI0qurKScmZqkqKrKQDs6NzA2X1M/SEY0KB0WISQaJD7FsKyel56ppa/gMycuKyEufcazq6CboaajrcBmRU05Lz1GQEE8TjstJSAxJR8qNE7/za2jrKqprrdoSVQ7LzlIetXLr6qtrayttcrfyVNGSUtZQENYSDg4KS40JykqMDw9Try0ta+vrbLL0s1eSEZe1eHQuLG2uLOvu9a/wf1ScOVeQk1zPj4zKDQtJCgoLzc1Tru6tLCuqrbJx8xYRkVb3mXMt7i2tLCvvb28x9b4/dhOSGpHQTIuJDAoHyglNDU926+0rKqqqb7MzFQ6OzpRXF28sLKtrKusubq71uFlWmU/SFo7OS8qHRsxHx8qMr7HxaGdp6awrbguLzouLS5Pr7q1n5+jqK2nuvvJ1lpLP1ZWMTYtKB4YDyAxGSzLpp6nnJGitLxRRx8ZKi4rQ7g=",
+      "step_time": 0.007809199974872172,
+      "context_id": "c1",
+      "request_id": "req_6e3147210c8eed72b52c8f37fcf9fd39"
+     }
+    },
+    {
+     "send": {
+      "type": "chunk",
+      "status_code": 206,
+      "done": false,
+      "data": "n52im5ihq7m7yUBI2XltS1daMSMgGRUKDlEjJK+aj5ehj5hCNiYlHA8eXUbAo5aSnJ6ZpdVKTXI5PbevuMLM4jAaFxANBAy+Lz6bjYeTo5ChHhcVGhYPK6OloZaOj6SypsgrKEW96sKenaq+XD4dDg0KBgAfn0WhjIKHp6qZIwsMEx4WHJuPmZiRjqAqOcgqHzyknamck5zDNykbCwkJCgQHlZa6jISDljK34AsIECEyJK+Lj56cmJ0rG1TsK0aekZuhlptjJyEcDwoLDAsFYIqqmoqHjjoquhcIDyLQWOaQjJ6uqqY+Fyi8deCgkJOjpqRYHxsbGQ8PDxAGG4ydnY2LjNodzB0JDh66vWmTjJ62zK9KGSqws62dkZSmq7I8Ih0gHhMTExIHDpWYpI+MjK8cSCYMDhu8rMyXjp26VcxAGymupqObkZKnuL06HxwhJhgXGBUIDJ2aqZWNi6seTC0ODhq7sl6Zjpy+UrlLHCqto6afkpSsv8JXJR4qLBsaGRkLB7OarpqQipwhRTkSDhNKuESfj5is+K7MHyi9p6upmJapu7nCMiEqLhwZFhgLCc+iqZuSiZg5yD0YDxAtNyusl5ais56qLS3QtM7Bnpyqr6uuVDM6Lx4XFRYKCi+4r5+UipOtqr0qFREdHhwxr56iopiaq8G3rcdSw7W5v7mtt851RC8fGRYOChYsSLWfkI6YmpytNRwcGxUXID7HuKOZmJydm56su8fgSzxIW05IPjwvJB8aFhshJjVrrqKkoZ2fqMH0XzwsKTA/PT5cxr3BvbOxt72+vL/Jxb+9v8jP3F1EPT06NTU3OTo8QElKSU1QUlJTX3Fvfd7Nx8S9uLW0tbOytLe5ubq9wMXHzuZoV0xAOjYyLy4tLi8xNTo/Rk1abfjn2tPPzMfDv7y6t7a2tra4ubq8vb/BxMrO0tv1XExCOzUwLi0tLS4yOD5GUW3h2NXSzs3MyMXAvr28u7u7u7y8vb6/wsTHzNDW3u9jUkk/OTQvLiwsLS80OkFOY+fVz83LysjGxcK/vr69vb29vb29vb6/wcTHzNLa5XZcTkY+OTQvLi0tLS8zOT5JWH7d087LycfHxsXExMPCwcC/vr6+vb6/wcTIzdTc5ftnWU9HPzo1MS8uLS4wNDk/Slhy49jSzs3My8rHxcPBwL++vr6+v7+/wcPFyMvP1t7ubVxRSUE8ODQwLy4vMDQ5PkhSZu3d19TQzs3MysfEwsC/v7/AwMDAwMHBwsTGyczR2eX+ZFVMRT46NzMxMTEzNjs/SVVs6dzX1NLRz87LycbDwcDAwMDBwsPDxMTFxsfJzM/V3u5rWk9IQj06NzUzMzQ2OT1DTFhs7N3Y1dPQzs3LycjGxcXExMXGxsfHyMnJycrLzc/U2uX+ZFdNR0A9Ojc1NDU2ODs/R05bb+ve2NTRz87NzMrJycjIycnKy8zMzMzNzc3OztDT19zk9G1dU0xFPzw6ODc3ODk7PkNKUFxs8uLb1tLPzczLysrKy8zNzs/R09TV1dbW1tfY2dve4un1cWNZUEtGQQ==",
+      "step_time": 0.007793460041284561,
+      "context_id": "c1",
+      "request_id": "req_6e3147210c8eed72b52c8f37fcf9fd39"
+     }
+    },
+    {
+     "send": {
+      "type": "chunk",
+      "status_code": 206,
+      "done": false,
+      "data": "Pjw7Ojo7PD5CSE1WYnrp3dfTz87NzMvLy8zNzs/R09bY2tvc3d7e3+Hk5+rv+XVrY1xWUE1JRkNAPz4+P0BESE1UX3Tr3tfTz87NzczNzc7P0tXY297i6O70/Hp1c3Nzc3NzcG5saWZiXltXVVJPTk1MTE1OUlddZnXw5d3Y1NDPzs3Nzc/R1Njd4OfzfnRraWNjX19dXV1cXWFmYWVialrS/UhcXnphZ27l5M/h5clrWWzm3vDQxu360dLW2tTLx9jFucjQxcPMwLrZSk5uaUJEVz08TUtFSf/eedrFxMjBvb7Ix73AyLu5u7e4tbO5uLe+xc18SjozKyMfHRoYGBooKCfXt8yto6qutrbRMTk+KCk6Oz/Mr6qpoJyioqGtu8teNignIxoZGhUSFRQdLB/spb+hmJ2cpKauLzozGh4lHiQ3xLismpiblpWcn6Ox10c2KCAkHxwfIB0dHRofPS4yqK+wmJ2gmZ+nts9cKygqISQxON/BqJ2hmJScmpmtrq48Nz0kJCkfISUfHyAdIzYtL7nD0p+hrZuesaeuXGU+LisrLi4+7su1qKWfnZ+goqy0vV9EODIuLC4sKy8tKSwpKDIvLk5UULmzt6qpr6ywvb7L/V5bU1Vu6dnJw8G8vL+/wsvQ2uL7fPpzbnl4Z2dcVE9MSERDQEBDQ0dMTlNbZW/75ePaz87KxMLAvr29v8DDyc3U3eb1enJtcXRufHdscmpfY15XWFdUV1lZXF9fX2NgXl5cXF1eYm387d/Y1dDP0NHV2+Luem1lYGFgYmltdfv49O70+Pl3b21oZGNfXl5cXFxbXF1eZGpy9eni29nY2Nnd4u15aV5ZVlNTVFVZXWFpc/zv6+no5+nr7vX/dGxnYV5dXFxdX2Rrdfbr497b2trb3eLq+XFpYV1bW1tcX2RrcXr59vTz+Pv+d3NvbGxsa2xtbW5wcXR4ev77+fPv7+7t7vD0+X51b2xpZ2VlZWZnamxvc3d7ff38/P5+e3l1cnJvbm9vb3Fzdnl7fvz5+fb29/n6/n15cm9samloZ2hqamxwcnZ6ff79/Px9fHlzc29ubm1tb3J0eP7/+vz49fT3+fx9e3dzcW9tb25ubXJvc3l+cPt5+3z8dfRudft0eG95avZje/52ZOFgdGnpYO9o2U23xzS4Mb7xV8pCYdrsV8NYz03A9e7MUsPyWt1dbslibmtGaWbo2lbPWebPbLnU28lE41ZP90/ZTVNjYtPqze/S82rOYtFbX2lP315jflLgXmR1Ud5r9fRzde5p5ON25GLxcGXnb192U/Je9OBs02HoYHXqWWRVV1JhYl5kZ3NiZu9m9/Vk311zcWp3bOpb3+v92evt2d3t1+fu6uF58PJYfkpMSz5FPj49PT8/P0dOW3Ll0MzDv7y7uLu5uLq6ub27ur6+w8XW1PhJRjotLSUhHB0fGygpL+i9sKSfoJ+grbXEQDMuJyYtLjjlvrCjn52bm56fpq6/zz81LicjIR4cHBMiHRpINEWopKWZmJ+eoMX9QyQfIBwdKS49uqqmnJqcm50=",
+      "step_time": 0.007792930002324283,
+      "context_id": "c1",
+      "request_id": "req_6e3147210c8eed72b52c8f37fcf9fd39"
+     }
+    },
+    {
+     "send": {
+      "type": "chunk",
+      "status_code": 206,
+      "done": false,
+      "data": "pKmvytNoS0tjTlZsTTU0JSEXDyMTFkYtRZ2bnpGRnp6hQi8sGRYbGh0vT8aknJuYlpyipLV8/UA3Wejbtay1r7VsMSgbFgsOGw0duFyrjY+WjI+sscUcFRkRDx0lLLWfnZaRlpudq21ENCctPD++pqGemp+suEQeGBANBwcZEhqinp6JiJGOj68zLBcNDxIQHD/Lp5aSkpGVob3dKxshIx89vK6clpaXmaK/NyUWDw4MCAkfJiWdj5uNh5Ocmr8fGxgPDRYfJGKempiRkJmgrF8pHx4dIDXWs6CXlZeYnarQNSEaFBIQEA0QLUo+ppKYl4+ToLDaMBwWGBoZHz3Frp+ZmZyfp71GLysnJis+27innZudnqCt0EMwJB0eHh8eHxwhRNVqx62opqqqp6zC808+Mi4tMDg/Wcy/vLm6vcDGzdbk4tzWz8rFwL+/v8LIzM7N0NzxaVxSSUA8NzEvLi4wMjM3PkdV9NjSzsrIxcXFxcjKycjJycjIys3U3eHk6vb05tvTzsrHxMPFxsjN1e9eUkg/OzcyMC8uLi8xNDtDSln33dTPzszJycjFw8HBw8LCxcrO1t3l+nB3+Ovh2tTPy8nHxsfJzdThdFhMQz06NzUzMjIzNTg7PkNKUVxq9+LXzcnFw8LCw8XIzNDY3+x+bWZjY2Nnb/fm3NbQzcvJycnLzdLc72VUS0Q+Ozg2NDQ0NTc7PkVNWGvr29HMycfGxcTFxsjLztXc5vJ7bmllZWlvfvDn3trW0s/NzMzMzc7P1dzsbltORz88OTc2NTU2ODw/SFFh9d3UzsrIxsXFxcbIys3R2N/o9XVqZGJiZGpy+eri3NfSz83MzMzMzc7Q1t3sb1xPSEA9Ojk4ODk7PUBGTVdn8t3TzcrIx8fGx8fIyszN0NXb4u57bWZiYmZtfuzh29fTz83My8vLzM3O0tnkfmFVTUhEQD49PDw9Pj9DR0xUYvXd1M7LyMbFxcbHyMrMz9TZ3ubvfnNvb3b3593Wz8zEx87NycPCw8bFwsLH0N78X01BNS8wNTo+Q1Dny8PBw8fLzt1vV1p99WZWVGzd2dzd18vDwsC/vr3Eztzg4N739d7Owbi1trzE1kUtHxYMDh5bq6etnpWZry8gKC4rKCnfo6Guz0zr6DUrMu2tqbK1t7jASzhD8LqxtLCsrbXI1sK+vtZk5cTeRSoZDQcaoJCPodGsvSYXESaln6a2za6zLh4gOq2sx9nOurR2P1nRvMlKTda8rbjOw8G4vfTKvLq50+3Jy/VsVzgeEQkOpYqLmTIeLCAaI2WYjZxUHxorSEXGqaOnXiMhLtiusba5yVs2LUK2p6a3fG/e3enWuK2vvu1UWFnp1sTM2k0sHBUMEZuIi54ZDh0oOLShlJG+GxMYV6CjqK/YRSgeK8Cjnq1TMi00S96+q6izVjhD3MK6tbe911BM5szIztpnRkNk/UEtGxAMMIuIlS0MEDy6q6ekna8eEhlOm5en7C8oLS9Sr6apvTcqL0jBub7Dx8rbT+62rbDHS0jmyLy9xdBdPDg+3cDWPS0=",
+      "step_time": 0.0079749800497666,
+      "context_id": "c1",
+      "request_id": "req_6e3147210c8eed72b52c8f37fcf9fd39"
+     }
+    },
+    {
+     "send": {
+      "type": "chunk",
+      "status_code": 206,
+      "done": false,
+      "data": "Ih0TD7uKiJgdChQ/qp+sralMHxcds5mbrjIlMTxWwrSprlItKTi/r7G7zdx5TWrDtbG77VJT3b67vMHcVkQ8Q1Th2Wc5LSYhFhaujIudGQwZbZ+esba+OiIbKqycoMkpKDVL0sK1rbtNLy1JvrW2wdbsVktiz7mwuc1YWdHAvbu/0lNARVj991Y/My8vLCEVJ5mMklQSFC+worTKtcQ7IyBhpaK3NCs+cd3737i22zkwP866usTLz/hWV9m+trnIfGzryry3us5MPTxN1dlROzMwNjQpGR2uk5KuHRcqvqu93Lq2dCskQK+ouD0xRe7rVV6/t8dFND7Uvb/P18vK1237xLe4xNvd1tfezr69zFZARVfu/ks+OTEpIBgmppaa3x0dMM+2vbGrwjQiKNKtrb5fe1s8N0bAsr1tPjxJTl3cxr3J7V9l08zOxsK+v8rW1MrExsfIzelVTmrvalRIQT83Kh4ZNp6YojwgKjtU5b+np9MuJC/Swb69vL9ILzNeubXF2PZcSD1OyLu90Xn3eG1t5MvEv73E02tZ6s7Kztvd6FNJS131XE5QQC4eFC2claA7JzkyLDe8mp3BNikwOTPqrqivSTM4Oj9NxK6zy0s9R0pL6sC3vnVMTVpUT3zDu8hvVm/yYFrny8zoXF1zYk9PYef0W1lheXle9dLF12Tl0M70b93fV09UWUo8T8a/zGtfbkg+RezI3GdcSDoyQ8S7vsrRz1tFTOK/vb26v83q69LO0tPT7U0+PkdTWFlcTz83ODoyKCM0v7i2t7OxPiQqW7bBvqyuyzgtOT9H6Lapr9ZJPDg1PNi2sba9xN5JP0hg39nOx8znU0dISEpa2sjEx8/pW0lGSU5e7tjW52VPR0ZIT2L15+nvclpSUFRYW2X94dzpcGlgWlBTX2z87OXk7G5lZ2VfZ+nb2d3u28vGytfb4PP09ePU2/BmV1NPVWZt+/tcUUQ5MSsiJkPJubmxqrRsPzxCNzJOxbi3ua+00FZHSEA4QGDUycrAvs3wW1lTR0dTd9/ez8bGz9/g8VxQVGJmY3vj2dzn3+P4ZVtlcGtmZ/3u/vz/fHFqe/P6cmxtbGNgZnn5/fHq6eXf29jW1tbW19fW1tng8HxuYVtYVlNNSkhDPjo4Ojw9Qktj3c/Gv7y8v8TI0+5bUE9MSk1TY3Tu2c/Nzc3Lztjh7vpuX15hZmlrd/Ty8+3m4uLh3t3e4OTp7vL7/vz58e7t6ujo6+zs7e7u8vHz9/j4+P15cm5raGZnZmZjYF9eXV1cXV5eXl9jZ2x0++3l4N3b2dnY19bV1NLR0M/Q0tTX2t/m8HZmXFROSkdEQT8/P0BDR0xSXnvi18/MycfHxsbHyMrLztHX3ef3b2ZeW1lYWVpbXF5gZGltdP/48u7t6+vq6urq6uno5+fm5ubn6Onr7vL2+357d3Vyb21sa2ppamtsbnF2ffv17+zq5+bl5OTk5unr7vT8e3NuamZjYF5dW1taWllZWVpbXF5hZmty//Pr5uDe3Nvb29vc3uHm6/L+dGxoZGFfXl5fYA==",
+      "step_time": 0.007898340001702309,
+      "context_id": "c1",
+      "request_id": "req_6e3147210c8eed72b52c8f37fcf9fd39"
+     }
+    },
+    {
+     "send": {
+      "type": "chunk",
+      "status_code": 206,
+      "done": false,
+      "data": "YmVnamxvcXR3en79+vf08fDv7+/v7+/w8/X4+/97eHRwbm1sbGtrbG5vc3h++fHt6ebj4N/e39/g4+fq7/X9eXNsaWVhX15dXV1dXl9hZGdpbHB2ffv28u/v7+/v8PL19/r9fXp3dHJxb29vb29vb3Bxc3N1d3h4ent8ff/9+vj39vX29vf4+fz9fnx7eXd1c3NxcHByc3R1dnd4eXp7e3x+/v79/Pz8+/z7/P39/v39/fz7+vv8+/z9/f3+/v3+fn59e3x7e3x7fH5+fX5+fHt5e3t6eXd4eHl3d3l8e319fH17fX3+e3p1eHV2c3V3dHf9fn5+/H16e3L+a25rbWVubuJzv7DaY/Ta+E1jdE9KZ9bV4c2/xtTMxcv1feP7VlVrZl1l49zp4tjX4+Dd6Wdi8WZcYHX9a/vs93j07XRlaXJpXmVtal5j93dsbXh0X2hxZmBibWJeaWtua3H9bG10Z2ZiY2VgamhmdHr/eHB8bWpubmxlZ2pubm51enZ5eW9ydW9tbnt5a3R8d3pxfH5vfP5zdXh8dW12eXj/ff57dXx4cXv8fXh3fHtze/t2ePr7eXj6+nh5/H5zdfr6b3X1+3Z79vd6d/l9cHr9fHh89fp1ffr+fHp+enR+/3d9+fh7c/37d3r8/Hhy/n5zef/+fHv8/3V7/Xl0d357cnf/fHt8/ft8ent1dnl3enp8/Xl5/X5+fHh8e3Z3eH1+fH18fH18fHt6e3h1eHx+enx9fHl0en15enx7e3l6fHh6fXp3dXl9eXh7fHh2eXt4eHt6eXl6enh3eHh1dnl5d3d5e3p3d3l4dnd4eHd1dnZ3eHl5eXh4eHZ2eHh3dnh5eHd4eXh2d3l3d3d4eXh4enl4eXl4eXl5eHd4eXl5eXl5eHl5eHl5eXp6enl5enp6enp6e3p7enp6e3t7e3x8fHt7fHx8fHx8fX18fH19fHx9fX19fX59fX19fX1+fn59fn5+fn5+fn5+fn5+//5+/////////v7//v7+/v39/v39/f39/fz9/fz8/Pz8+/v7+/v7+/r6+/r6+vr6+fn5+fn5+fj4+Pj4+Pj49/f39/f29/b39vb39/f39vb29vb29vb29vb29vb29vb29vb29vb29vb19vb29vb29vb29vb29vb29vb19fb29vb29vb29vb29vb29vb29/b39/f39/f39/f39/j4+Pj4+Pj4+fj4+Pn5+fn5+fn6+vr6+vr6+vv7+/v7+/v7+/z8/Pz8/f39/f39/f3+/v7+/v7+/v///35+fn5+fX19fX19fX18fXx8fHx8e3t7e3t7enp6enp6enl5eXl5eXl5eXh5eHh4eHh4eHh4eHh4eHd3d3d3d3d4d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3Z3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d2d3d3d3d3d3d3d3d3d3d3d3d4eHh4eHh4eHh4eHh4eHh4eXl5eXl5eXl5enp6enp6e3t7e3t8fHx8fHx8fX19fX19fn5+fn5+fn7/fv/+/v7+/v0=",
+      "step_time": 0.007988299941644073,
+      "context_id": "c1",
+      "request_id": "req_6e3147210c8eed72b52c8f37fcf9fd39"
+     }
+    },
+    {
+     "send": {
+      "type": "chunk",
+      "status_code": 206,
+      "done": false,
+      "data": "/f39/f38/Pz8/Pz8+/v7+/r6+vr6+vr5+fn5+fn5+fj4+Pj4+Pj49/f39/f39vb29vb29vb29vb29vb29vb29vb19vb19vb29vb29vb29vb29vb29vb29vf39/f39/f39/f49/f3+Pj4+Pj4+Pn5+fn5+fn5+fr6+vr6+vv7+/v7+/v7/Pz7/Pz8/Pz9/f39/f3+/v7+/v7+/v//fn5+fn59fX19fX19fX19fX19fX19fX19fX1+/////////////35+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8=",
+      "step_time": 8.925003930926323e-05,
+      "context_id": "c1",
+      "request_id": "req_6e3147210c8eed72b52c8f37fcf9fd39"
+     }
+    },
+    {
+     "send": {
+      "type": "done",
+      "status_code": 200,
+      "done": true,
+      "context_id": "c1",
+      "request_id": "req_6e3147210c8eed72b52c8f37fcf9fd39"
+     }
+    },
+    {
+     "expect_no_more": true
+    }
+   ]
+  }
+ ],
+ "client": [
+  {
+   "op": "send",
+   "context": "c1",
+   "request": {
+    "text": "रद्द के बाद।",
+    "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+    "model": "m1",
+    "language": "hi",
+    "output_format": {
+     "container": "raw",
+     "encoding": "pcm_mulaw",
+     "sample_rate": 8000
+    }
+   }
+  }
+ ],
+ "expect": {
+  "contexts": {
+   "c1": [
+    {
+     "outcome": "done",
+     "audio_bytes": 8960,
+     "audio_sha256": "e179ee8be3ad2271a6e547bd4cca283e311fd9eb4beda7cc1a04a8eb98b120f7",
+     "request_id": "req_6e3147210c8eed72b52c8f37fcf9fd39"
+    }
+   ]
+  },
+  "connections": 3,
+  "sleeps": [
+   [
+    0.375,
+    0.5
+   ]
+  ]
+ }
+}
