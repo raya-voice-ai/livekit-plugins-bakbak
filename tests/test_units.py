@@ -90,7 +90,9 @@ def test_interrupted_streams() -> None:
 @pytest.mark.parametrize(
     ("event", "draining"),
     [
-        ({"status_code": 503, "error_code": "service_unavailable"}, True),
+        # error_code alone is not a drain: it also means "cannot check balances".
+        ({"status_code": 503, "error_code": "service_unavailable"}, False),
+        ({"status_code": 503, "error_code": "service_unavailable", "message": "Retry."}, False),
         (
             {"status_code": 503, "message": "Restarting. Reconnect and send the request again."},
             True,

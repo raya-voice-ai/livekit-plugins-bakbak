@@ -158,10 +158,12 @@ def interrupted(message: str, *, request_id: str | None, audio_delivered: bool) 
 
 
 def is_draining_signal(event: Mapping[str, Any]) -> bool:
-    """A WebSocket refusal saying the connection is draining (§6.4)."""
-    if event.get("status_code") != 503:
-        return False
-    if event.get("error_code") == "service_unavailable":
-        return True
+    """A WebSocket refusal saying the connection is draining (BEHAVIOR.md §6.4).
+
+    Only status 503 with the reconnect phrase: ``error_code``
+    ``service_unavailable`` alone also means the service cannot check balances,
+    an ordinary retryable refusal that a reconnect would not cure."""
     message = event.get("message")
-    return isinstance(message, str) and _DRAINING_PHRASE in message
+    return (
+        event.get("status_code") == 503 and isinstance(message, str) and _DRAINING_PHRASE in message
+    )

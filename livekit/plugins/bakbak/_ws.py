@@ -78,13 +78,14 @@ def backoff(retry: int) -> float:
 class WSRequest:
     """One request on a context: its outcome is one of the events below."""
 
-    __slots__ = ("audio_bytes", "message", "request_id", "seq")
+    __slots__ = ("audio_bytes", "drained", "message", "request_id", "seq")
 
     def __init__(self, message: str, seq: int) -> None:
         self.message = message  # the JSON text sent, kept for resending
         self.seq = seq  # send order across contexts
         self.request_id: str | None = None
         self.audio_bytes = 0
+        self.drained = False  # already refused once by a draining server
 
 
 @dataclass(slots=True)
@@ -683,9 +684,13 @@ class WSContext:
         elif kind == "done":
             self._settle(WSDone(request))
         elif kind == "error":
-            if request.audio_bytes == 0 and _errors.is_draining_signal(msg):
+            draining = _errors.is_draining_signal(msg)
+            if draining:
+                sock.draining = True  # nothing more is sent here; closed once unused
+            if draining and request.audio_bytes == 0 and not request.drained:
                 # Not this connection: send it again on a new one (BEHAVIOR.md §6.4).
-                sock.draining = True
+                # A second refusal is an ordinary retryable error, below.
+                request.drained = True
                 self._in_flight.popleft()
                 sock.unfinished -= 1
                 request.request_id = None  # the resend gets a new one
@@ -775,7 +780,9 @@ class WSContext:
         if sock is None:
             return
         sock.contexts.discard(self)
-        if sock.retired and not sock.contexts and not sock.closed:
+        if (sock.retired or sock.draining) and not sock.contexts and not sock.closed:
+            # Nothing will be sent on it again: close it rather than wait for the
+            # server (BEHAVIOR.md §6.4).
             self._client._spawn(self._client._close_socket(sock))
         self._maybe_unregister()
 

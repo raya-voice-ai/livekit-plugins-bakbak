@@ -34,30 +34,44 @@ SCENARIOS = load("ws")
 IDS = [s["id"] for s in SCENARIOS]
 
 
+# A retryable refusal that the SDKs resend themselves (after the backoff of
+# §4.3) reaches the plugin's caller as a retryable error, at once and without a
+# wait, and LiveKit retries the attempt on a fresh context (§9). Each entry: the
+# connection whose script ends at the refusal, and how many steps to keep.
+_LIVEKIT_RETRIES = {
+    "ws_capacity_503_retried": (0, 2),
+    "ws_service_unavailable_is_not_draining": (0, 2),
+    # The first draining refusal is resent on a new connection by the transport
+    # itself (that part is the plugin's too); the second is the ordinary error.
+    "ws_drain_refused_twice": (1, 2),
+}
+
+
 def _adapt(scenario: dict[str, Any]) -> dict[str, Any]:
-    """Map the scenarios whose behaviour LiveKit owns (§9) onto the plugin's."""
-    if scenario["id"] != "ws_capacity_503_retried":
+    """Map the scenarios whose retries LiveKit owns (§9) onto the plugin's."""
+    if scenario["id"] not in _LIVEKIT_RETRIES:
         return scenario
-    # The refusal reaches the caller as a retryable error, at once and without a
-    # wait; LiveKit then retries on a new context. So the server sees the
-    # request once, and nothing more on this context.
+    connection, steps = _LIVEKIT_RETRIES[scenario["id"]]
     scenario = copy.deepcopy(scenario)
-    script = scenario["connections"][0]["script"]
-    scenario["connections"][0]["script"] = [*script[:2], {"expect_no_more": True}]
-    refusal = script[1]["send"]
-    scenario["expect"]["contexts"]["b"] = [
+    scenario["connections"] = scenario["connections"][: connection + 1]
+    script = scenario["connections"][connection]["script"]
+    script[steps:] = [{"expect_no_more": True}]
+    refusal = script[steps - 1]["send"]
+    (context_id,) = scenario["expect"]["contexts"]
+    scenario["expect"]["contexts"][context_id] = [
         {
             "outcome": "error",
             "audio_bytes": 0,
             "error": {
                 "class": "InternalServerError",
-                "status": 503,
-                "error_code": None,
+                "status": refusal["status_code"],
+                "error_code": refusal.get("error_code"),
                 "retryable": True,
                 "request_id": refusal["request_id"],
             },
         }
     ]
+    scenario["expect"]["connections"] = connection + 1
     scenario["expect"]["sleeps"] = []
     return scenario
 

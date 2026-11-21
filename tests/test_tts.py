@@ -397,6 +397,66 @@ async def test_draining_server_moves_the_rest_of_the_reply(
     assert [texts[i] for i in request_order(events)] == sentences
 
 
+BILLING_DOWN = (
+    503,
+    {
+        "message": "The service is temporarily not accepting requests. Retry shortly.",
+        "error_code": "service_unavailable",
+        "retryable": True,
+    },
+)
+
+
+async def test_service_unavailable_is_an_ordinary_refusal(
+    fake: FakeBakbak, session: aiohttp.ClientSession
+) -> None:
+    """`service_unavailable` without the reconnect phrase is not a drain (review r8b):
+    no reconnect storm, and LiveKit sees the 503 and retries it."""
+    fake.plan = lambda _: Plan(refuse=BILLING_DOWN)
+    tts = make_tts(fake, session)
+    errors = collect(tts, "error")
+    started = time.monotonic()
+    with pytest.raises(APIStatusError) as caught:
+        await run_stream(tts, [TEXT], APIConnectOptions(max_retry=3, retry_interval=0, timeout=2))
+    assert time.monotonic() - started < 1.0
+    assert caught.value.status_code == 503
+    assert caught.value.retryable is True
+    assert [e.recoverable for e in errors] == [True, True, True, False]
+    assert all(isinstance(e.error, APIStatusError) for e in errors)
+    assert fake.ws_connections == 1
+    assert len(fake.sockets) == 1
+
+    fake.plan = lambda _: Plan()  # the outage is over
+    events = await run_stream(tts, ["अगला वाक्य।"])
+    await tts.aclose()
+    assert events[-1].is_final
+    assert fake.ws_connections == 1
+
+
+async def test_a_draining_socket_is_closed_once_unused(
+    fake: FakeBakbak, session: aiohttp.ClientSession
+) -> None:
+    # After the first sentence the server drains: like the Router it refuses
+    # everything sent to it from then on, but it never closes the socket.
+    refused: set[str] = set()
+
+    def plan(r: Received) -> Plan:
+        if r.index > 1 and r.body["text"] not in refused:
+            refused.add(r.body["text"])
+            return Plan(refuse=DRAINING)
+        return Plan()
+
+    fake.plan = plan
+    tts = make_tts(fake, session)
+    events = await run_stream(tts, [TEXT])
+    await until(lambda: len(fake.sockets) == 1)  # the client closed the draining one
+    assert len(tts._ws._sockets) == 1
+    await tts.aclose()
+    assert fake.ws_connections == 2
+    texts = {r.index: r.body["text"] for r in fake.received}
+    assert [texts[i] for i in request_order(events)] == split_sentences(TEXT)
+
+
 async def test_dropped_socket_resends_requests_without_audio(
     fake: FakeBakbak, session: aiohttp.ClientSession
 ) -> None:
