@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import contextlib
 import json
 import random
 import re
@@ -64,6 +65,7 @@ MAX_ACTIVE_CONTEXTS = 16
 STALE_AFTER = 45.0
 
 _MAX_MESSAGE_SIZE = 16 * 1024 * 1024
+_CLOSE_TIMEOUT = 1.0  # longest wait for the server to answer our close (BEHAVIOR.md §6.4)
 _CONTEXT_ID = re.compile(r"[A-Za-z0-9._-]{1,128}")
 _FATAL_CLOSE_CODES = frozenset({1008, 1009})
 
@@ -385,7 +387,10 @@ class WSClient:
         if self._socket is sock:
             self._socket = None
         if not sock.ws.closed:
-            await sock.ws.close()
+            # A peer that stopped answering never sends its close frame back; aiohttp
+            # would wait 10 s for it. Cancelling the wait drops the connection.
+            with contextlib.suppress(asyncio.TimeoutError):
+                await asyncio.wait_for(sock.ws.close(), _CLOSE_TIMEOUT)
         tasks = [t for t in (sock.reader, sock.writer) if t is not None]
         for task in tasks:
             task.cancel()

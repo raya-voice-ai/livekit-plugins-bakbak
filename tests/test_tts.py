@@ -17,6 +17,7 @@ from typing import Any
 
 import aiohttp
 import pytest
+from aiohttp import web
 from livekit.agents import (
     APIConnectionError,
     APIConnectOptions,
@@ -823,3 +824,31 @@ async def test_a_reconnect_that_fails_with_any_error_fails_the_stream(fake: Fake
     assert time.monotonic() - started < 1.5
     await stream.aclose()
     await tts.aclose()
+
+
+async def test_closing_does_not_wait_for_a_silent_peer(session: aiohttp.ClientSession) -> None:
+    """A peer that accepted the socket and went silent (review r7): aclose() returns
+    within about a second instead of aiohttp's 10 s close timeout."""
+
+    async def silent(request: web.Request) -> web.StreamResponse:
+        ws = web.WebSocketResponse()
+        await ws.prepare(request)
+        await asyncio.sleep(3600)  # never reads, never answers, never closes
+        return ws
+
+    app = web.Application()
+    app.router.add_get("/v1/text-to-speech/ws", silent)
+    runner = web.AppRunner(app, handle_signals=False, shutdown_timeout=0.1)
+    await runner.setup()
+    site = web.TCPSite(runner, "127.0.0.1", 0)
+    await site.start()
+    server = site._server
+    assert isinstance(server, asyncio.Server)
+    base = f"http://127.0.0.1:{server.sockets[0].getsockname()[1]}"
+    tts = bakbak.TTS(api_key="test-key", base_url=base, http_session=session)
+    tts.prewarm()
+    await until(lambda: tts._ws._usable_socket() is not None)
+    started = time.monotonic()
+    await tts.aclose()
+    assert time.monotonic() - started < 1.5
+    await runner.cleanup()
