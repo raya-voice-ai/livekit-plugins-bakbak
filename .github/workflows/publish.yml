@@ -1,14 +1,20 @@
 name: Publish to PyPI
 
+# release-please creates releases with GITHUB_TOKEN, and events made with that token start no
+# workflows, except workflow_dispatch. So release-please.yml dispatches this workflow on the new
+# release's tag; publishing a release by hand also triggers it. PyPI's trusted publisher names
+# this file, so publishing must stay here.
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
   build:
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
