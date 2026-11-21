@@ -31,3 +31,11 @@ See [Migrating from livekit-plugins-raya](README.md#migrating-from-livekit-plugi
 - Metrics with time to first byte, connection reuse and the server's request ids.
 - `BAKBAK_API_KEY` and `BAKBAK_BASE_URL`. `RAYA_API_KEY` and `RAYA_BASE_URL` still
   work, with a deprecation warning.
+- Sentence segmentation is linear in the text's length, streamed or whole.
+
+### Security
+
+- Redirects are never followed, on HTTP or the WebSocket handshake, so the key cannot
+  be sent to another origin; a 3xx is raised with its status.
+- The key is not reachable from errors (including chained causes) or reprs, and a
+  key with whitespace or control characters is refused without being echoed.

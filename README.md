@@ -139,16 +139,21 @@ The plugin accepts what LiveKit users tend to have at hand and sends the API's c
 |---|---|
 | `"hi-IN"`, `"hi_IN"`, `"Hindi"` | `hi` |
 | `"marathi"`, `"mr-IN"` | `mr` |
+| `"bengali"`, `"bangla"`, `"bn-IN"` | `bn` |
+| `"assamese"`, `"punjabi"`, `"panjabi"` | `as`, `pa`, `pa` |
 | `"en-IN"` / `"en-US"` | `en-in` / `en-us` (the standard model's English voices) |
 | `"en"`, `"en-GB"` | `en` (the m1 English voices) |
 
-The m1 English voices use `en`, not `en-in`.
+The English name of every language above works too (`"telugu"`, `"kannada"`,
+`"gujarati"`, `"nepali"`, `"malayalam"`, `"tamil"`, `"english"`, any case). The m1
+English voices use `en`, not `en-in`.
 
 ## Transports and latency
 
 ### `transport="websocket"` (default)
 
-One WebSocket per `TTS` instance carries every utterance:
+One WebSocket per `TTS` instance carries every utterance (the protocol is in the
+[WebSocket API reference](https://docs.litwizlabs.com/api-reference/tts-websocket)):
 
 - `prewarm()` opens it. `AgentSession` calls this when the agent starts, so the first
   reply pays no handshake. Without it, the first utterance opens the socket.
@@ -157,14 +162,22 @@ One WebSocket per `TTS` instance carries every utterance:
   context's sentences one after another without a round trip between them, so audio
   flows continuously.
 - Interrupting the agent cancels the context on the server, drops its late audio, and
-  keeps the socket for the next turn.
+  keeps the socket for the next turn. The cancel is sent even when the interruption
+  lands while an error is being handled.
 - The client always reads, so the server's pings are answered. A socket that has heard
   nothing for 45 s (the server pings every 30 s) is replaced before it is used, rather
   than discovered dead by a request.
 - The server closes an idle socket after 5 minutes; the next utterance reconnects. When
-  the server restarts (close 1001), or says it is draining, the sentences it has not
-  started are sent again on a new connection. If the connection drops, sentences with
-  no audio yet are sent again; the first reconnect is immediate, and later ones back off.
+  the server restarts (close 1001), or refuses a sentence because it is draining (a 503
+  whose message says "Reconnect and send the request again"), the sentences it has not
+  started are sent again on a new connection, and the draining socket is closed once
+  nothing uses it. Any other 503, such as `service_unavailable` when balances cannot be
+  checked, is an ordinary retryable error that LiveKit retries.
+- If the connection drops, sentences with no audio yet are sent again; the first
+  reconnect is immediate, and at most two more follow with backoff. Closing a socket
+  never waits more than a second for a peer that stopped answering.
+- A chunk of audio that does not decode fails only its own sentence (retryable if
+  nothing was heard yet); the connection stays.
 
 ### `transport="http"`
 
@@ -244,7 +257,10 @@ unchanged:
 | A stream broke off after its audio had started | `APIStatusError` with `status_code=-1`, `retryable=False`, and the request id |
 
 The message is the API's own sentence, naming the field when a request is invalid
-("The request is malformed or invalid. voice_id: Field required").
+("The request is malformed or invalid. voice_id: Field required"). Every
+`error_code` is described in the [errors reference](https://docs.litwizlabs.com/documentation/tts-errors).
+A redirect is never followed (it would take your key to another address): a 3xx is
+raised as an `APIStatusError` with that status.
 
 LiveKit's base classes retry `retryable` errors according to `conn_options`
 (`max_retry`, `retry_interval`), each time on a fresh context. A retry happens only
@@ -258,8 +274,11 @@ server's next message.
 
 The plugin logs to `livekit.plugins.bakbak`. Logs never contain your API key or the
 text being spoken. Messages from the server are logged only under LiveKit's
-`lk.pii.*` fields. The plugin sends a `User-Agent` and `X-Bakbak-Client` header, and
-talks to nothing but the API's base URL.
+`lk.pii.*` fields. The key is not reachable from any error the plugin raises (causes
+that would carry request headers are dropped) and is not shown in any `repr`; a key
+with whitespace or control characters is refused when the `TTS` is created, without
+echoing it. The plugin sends a `User-Agent` and `X-Bakbak-Client` header, talks to
+nothing but the API's base URL, and never follows a redirect.
 
 ## How this plugin differs from the shared client behaviour
 
@@ -270,8 +289,8 @@ points follow LiveKit's conventions instead:
   SDKs' exponential backoff or `Retry-After`.
 - **Timeouts** come from `conn_options.timeout` (LiveKit's default is 10 s), not a
   separate 5 s connect / 60 s read pair.
-- **A missing key** raises `ValueError` (naming `api_key` and `BAKBAK_API_KEY`), as
-  other LiveKit plugins do.
+- **A missing or malformed key** raises `ValueError` (naming `api_key` and
+  `BAKBAK_API_KEY`), as other LiveKit plugins do.
 - **`speed`** is sent only when you set it.
 - **`RAYA_API_KEY` and `RAYA_BASE_URL`** are still read when the `BAKBAK_` variables are
   unset, with a one-time deprecation warning.
@@ -321,7 +340,9 @@ points follow LiveKit's conventions instead:
 
 ## Links
 
-- [Bakbak API documentation](https://docs.litwizlabs.com)
+- [This plugin's documentation](https://docs.litwizlabs.com/documentation/tts-livekit)
+- [WebSocket API reference](https://docs.litwizlabs.com/api-reference/tts-websocket)
+- [Errors](https://docs.litwizlabs.com/documentation/tts-errors)
 - [LiveKit Agents documentation](https://docs.livekit.io/agents/)
 - [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
 
