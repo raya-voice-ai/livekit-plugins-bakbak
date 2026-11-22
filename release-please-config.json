@@ -8,7 +8,14 @@
       "include-component-in-tag": false,
       "prerelease": true,
       "versioning": "prerelease",
-      "prerelease-type": "rc"
+      "prerelease-type": "rc",
+      "extra-files": [
+        {
+          "type": "toml",
+          "path": "uv.lock",
+          "jsonpath": "$.package[?(@.name.value=='livekit-plugins-bakbak')].version"
+        }
+      ]
     }
   }
 }
