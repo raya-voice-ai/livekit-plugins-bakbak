@@ -375,7 +375,9 @@ so its read timeout runs from the request to the first byte, then between bytes.
   after at least one item, with no text from any item, and at least one item
   matched none of these shapes, `send_stream` ends input as it otherwise would
   and then fails, naming the shapes it reads, instead of returning having sent
-  nothing.
+  nothing. An absent item (`None`, `null`, `undefined`) is a known item without
+  text, not an unknown shape: code that maps events to text yields one for each
+  event without text, and a reply that only calls tools is all absent items.
 - Back-pressure: with 64 unfinished requests on the connection, or a 17th
   context starting while 16 have unfinished requests, `send` waits; it never
   overruns the server's limits. For more parallelism, open more WebSockets.
