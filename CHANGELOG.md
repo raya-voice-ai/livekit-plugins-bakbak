@@ -4,6 +4,13 @@ All notable changes to this project are documented here. Versions follow
 [Semantic Versioning](https://semver.org/); entries are generated from
 [Conventional Commits](https://www.conventionalcommits.org/) by release-please.
 
+## [1.0.0-rc.3](https://github.com/raya-voice-ai/livekit-plugins-bakbak/compare/v1.0.0-rc.2...v1.0.0-rc.3) (2026-11-22)
+
+
+### Documentation
+
+* point documentation links at docs.bakbak.si ([#6](https://github.com/raya-voice-ai/livekit-plugins-bakbak/issues/6)) ([2c7deb1](https://github.com/raya-voice-ai/livekit-plugins-bakbak/commit/2c7deb16a29e7fcdbec967b0f569d4b3814a2de0))
+
 ## [1.0.0-rc.2](https://github.com/raya-voice-ai/livekit-plugins-bakbak/compare/v1.0.0-rc.1...v1.0.0-rc.2) (2026-11-22)
 
 
