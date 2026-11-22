@@ -85,8 +85,10 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
-[`examples/`](examples/) has a runnable [WAV script](examples/synthesize_to_wav.py) and a
-full [voice agent](examples/agent.py) (`pip install "livekit-plugins-bakbak[examples]"`).
+[`examples/`](https://github.com/raya-voice-ai/livekit-plugins-bakbak/tree/main/examples) has a runnable
+[WAV script](https://github.com/raya-voice-ai/livekit-plugins-bakbak/blob/main/examples/synthesize_to_wav.py)
+and a full [voice agent](https://github.com/raya-voice-ai/livekit-plugins-bakbak/blob/main/examples/agent.py)
+(`pip install "livekit-plugins-bakbak[examples]"`).
 
 ## Configuration
 
@@ -346,8 +348,10 @@ points follow LiveKit's conventions instead:
 - [WebSocket API reference](https://docs.litwizlabs.com/api-reference/tts-websocket)
 - [Errors](https://docs.litwizlabs.com/documentation/tts-errors)
 - [LiveKit Agents documentation](https://docs.livekit.io/agents/)
-- [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
+- [Changelog](https://github.com/raya-voice-ai/livekit-plugins-bakbak/blob/main/CHANGELOG.md) ·
+  [Contributing](https://github.com/raya-voice-ai/livekit-plugins-bakbak/blob/main/CONTRIBUTING.md) ·
+  [Security](https://github.com/raya-voice-ai/livekit-plugins-bakbak/blob/main/SECURITY.md)
 
 ## License
 
-Apache-2.0. See [LICENSE](LICENSE).
+Apache-2.0. See [LICENSE](https://github.com/raya-voice-ai/livekit-plugins-bakbak/blob/main/LICENSE).
