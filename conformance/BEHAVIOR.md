@@ -37,7 +37,7 @@ WebSocket, so the WebSocket also accepts `?X-API-Key=<key>` in the URL.
 | `voice_id` | string, required | From `/v1/voices`. A voice belongs to one model. |
 | `language` | string, required | Known today: `hi mr te kn bn as gu ne ml ta pa en en-in en-us`. |
 | `model` | string | `standard` (server default) or `m1`. Must match the voice's model. |
-| `speed` | number | 0.5–1.5, default 1.0. |
+| `speed` | number | 0.5–1.5, default 1.0. Changes `standard` voices only: `m1` voices accept it and speak at their own pace. |
 | `output_format` | object | `{container, encoding, sample_rate}`, below. |
 
 `output_format`:
@@ -59,7 +59,8 @@ WebSocket requests add an optional `context_id`: 1–128 characters of
 
 `200` with the audio as the body. With `output_format` the response carries
 `X-Audio-Format` (the encoding, or `mp3`), `X-Audio-Sample-Rate` and
-`X-Audio-Channels` (both absent for mp3). `Content-Type` is `audio/wav`,
+`X-Audio-Channels` (both absent for mp3). Without `output_format` it carries none
+of them and the body is a WAV file, which describes itself in its `fmt ` chunk. `Content-Type` is `audio/wav`,
 `audio/mpeg`, `audio/pcm` (s16/f32 raw), `audio/basic` (μ-law raw) or
 `application/octet-stream` (A-law raw). Every response has `X-Request-Id`.
 
@@ -200,18 +201,21 @@ a string; the body's `detail` list rendered (below); the body's `error`; the HTT
 reason phrase; `"HTTP <status>"`.
 
 Rendering a `detail` list: each entry becomes `<loc>: <msg>`, where `<loc>` is the
-entry's `loc` without a leading `"body"`, joined with `.`; an entry with no `loc`
-is just its `msg`; a string entry is itself; an entry with no `msg`, and any empty
-rendering, is skipped. Trailing whitespace of `message` is ignored when checking
-for `.`, `!` or `?`. The
-entries are joined with `"; "`, e.g. `voice_id: Field required;
-output_format.encoding: Value error, …`.
+entry's `loc` without a leading `"body"`, joined with `.`, and `<msg>` is the
+entry's `msg` without a leading `"Value error, "` (pydantic's wrapper, which the
+server's own `message` leaves out); an entry with no `loc` is just its `msg`; a
+string entry is itself; an entry with no `msg`, and any empty rendering, is
+skipped. The entries are joined with `"; "`, e.g. `voice_id: Field required;
+output_format.encoding: encoding must be one of: …`.
 
 When the message is the body's `message` and the body also has a `detail` list
 whose rendering is not already a substring of it, the rendering is appended:
 `"<message> <rendering>"` if the message ends with `.`, `!` or `?`, else
-`"<message>: <rendering>"`. A generic sentence ("The request is malformed or
-invalid.") would otherwise hide which field is wrong.
+`"<message>: <rendering>"`. Trailing whitespace of `message` is ignored when
+checking for `.`, `!` or `?`. A generic sentence ("The request is malformed or
+invalid.") would otherwise hide which field is wrong; a message that already
+names the fields ("Invalid request: speed: speed must be between 0.5 and 1.5
+(inclusive).") is used as it is.
 
 ### 3.3 Retryable
 
@@ -295,12 +299,22 @@ so its read timeout runs from the request to the first byte, then between bytes.
 ### 5.2 Audio helpers
 
 - `Audio` (whole file) and stream results expose the bytes, `request_id`,
-  `content_type` and, when the headers are present, `encoding` and `sample_rate`.
+  `content_type`, `encoding` and `sample_rate`. They come from `X-Audio-Format`
+  and `X-Audio-Sample-Rate`. A whole file without those headers whose body is a
+  WAV file takes them from its `fmt ` chunk: format 1 at 16 bits is `pcm_s16le`,
+  3 at 32 bits `pcm_f32le`, 6 `pcm_alaw`, 7 `pcm_mulaw` (for format `0xFFFE`, the
+  first two bytes of the sub-format); the sizes in the header are not trusted
+  (a streamed WAV may give `0xFFFFFFFF`), and anything else leaves both unset.
+  For mp3, `encoding` is `mp3` and `sample_rate` is unset: the rate is in the MP3
+  frames, and the client must not guess it from the request.
 - `save(path)` writes exactly the bytes received.
-- `to_wav()` / `toWav()` wraps raw audio in a WAV header: the canonical 44-byte
-  PCM header for `pcm_s16le`; for `pcm_f32le` (format 3), `pcm_alaw` (6) and
-  `pcm_mulaw` (7) an 18-byte `fmt ` chunk (`cbSize` 0) plus a 4-byte `fact` chunk,
-  58 bytes in all. Mono; byte rate and block align from the encoding's sample size.
+- `to_wav()` / `toWav()` returns a WAV body unchanged and wraps raw audio in a WAV
+  header: the canonical 44-byte PCM header for `pcm_s16le`; for `pcm_f32le`
+  (format 3), `pcm_alaw` (6) and `pcm_mulaw` (7) an 18-byte `fmt ` chunk
+  (`cbSize` 0) plus a 4-byte `fact` chunk, 58 bytes in all. Mono; byte rate and
+  block align from the encoding's sample size. For mp3 it fails saying that MP3
+  cannot be wrapped in WAV and must be decoded with an audio library; for raw
+  audio whose encoding or rate is unknown it fails saying so.
 - Samples never straddle a chunk boundary in what the client hands out: if a chunk
   ends mid-sample (f32 or s16), carry the remainder into the next chunk.
 - No playback helpers in the core packages.
@@ -485,7 +499,8 @@ The plugin follows this spec except where LiveKit decides:
 - Responses: unknown fields and unknown event types are ignored.
 - Requests: the client sends the fields the caller gave, plus nothing it invents.
   An `extra_body`/`extraBody` option merges extra fields for anything new on the
-  server before the SDK models it.
+  server before the SDK models it. The server refuses fields it does not know
+  (422), so it is for fields the server has, not for experiments.
 - Enumerations (languages, models, encodings) are typed as the known values plus
   any string, so a new language needs no SDK release.
 - Semantic versioning. Public names in §2 and §3 change only in a major version.

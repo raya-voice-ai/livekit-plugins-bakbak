@@ -78,7 +78,7 @@
    "error_code": null,
    "retryable": false,
    "request_id": "req_detail",
-   "message": "Invalid request: voice_id: Field required; output_format.encoding: Value error, encoding must be one of: pcm_f32le, pcm_s16le, pcm_mulaw, pcm_alaw"
+   "message": "Invalid request: voice_id: Field required; output_format.encoding: encoding must be one of: pcm_f32le, pcm_s16le, pcm_mulaw, pcm_alaw"
   },
   "sleeps": []
  }
