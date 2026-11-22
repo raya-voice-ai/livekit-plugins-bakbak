@@ -22,7 +22,8 @@ session = AgentSession(stt=..., llm=..., tts=bakbak.TTS(language="hi"))
   retried.
 
 Hindi, Marathi, Telugu, Kannada, Bengali, Assamese, Gujarati, Nepali, Malayalam,
-Tamil, Punjabi and English (Indian and US), code-mixed text included.
+Tamil and English (Indian and US), code-mixed text included; see
+[Languages and models](#languages-and-models).
 
 ## Install
 
@@ -98,7 +99,7 @@ and a full [voice agent](https://github.com/raya-voice-ai/livekit-plugins-bakbak
 |---|---|---|
 | `api_key` | `BAKBAK_API_KEY` | Your API key. |
 | `voice_id` | `009ae8b5-4a03-492d-af1c-3055989ac734` (Anika M1, Hindi) | A voice belongs to one model; see [Voices](#voices). |
-| `language` | `"hi"` | The language of the text. Codes, BCP-47 tags and names all work: see [Languages](#languages). |
+| `language` | `"hi"` | The language of the text. Codes, BCP-47 tags and names all work: see [Languages and models](#languages-and-models). |
 | `model` | `"m1"` | `"m1"` or `"standard"`; must match the voice's model. |
 | `speed` | not sent (the server uses 1.0) | Speaking rate, 0.5 to 1.5. Changes standard voices only: m1 voices accept it and keep their own pace. |
 | `sample_rate` | `24000` | `8000`, `16000`, `22050` or `24000` Hz. Audio is 16-bit mono PCM at this rate. |
@@ -131,7 +132,17 @@ for voice in await tts.list_voices(model="m1", language="hi"):
 `list_voices()` returns every voice. `model` and `language` filter the list on your side.
 A voice works only with its own model: an m1 voice with `model="standard"` is refused.
 
-## Languages
+## Languages and models
+
+The languages that have voices, from `GET /v1/voices` on 2026-11-22:
+
+| Model | Languages |
+|---|---|
+| `m1` | `hi` `en` `kn` |
+| `standard` | `hi` `en-in` `en-us` `as` `bn` `gu` `kn` `ml` `mr` `ne` `ta` `te` |
+
+`pa` (Punjabi) is accepted by the API but has no voice yet. Voices are added over time,
+so `list_voices()` is the source of truth.
 
 Known codes: `hi` `mr` `te` `kn` `bn` `as` `gu` `ne` `ml` `ta` `pa` `en` `en-in` `en-us`.
 Other strings are passed through, so a language added on the server works without a new
