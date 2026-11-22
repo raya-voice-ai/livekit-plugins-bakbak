@@ -11,8 +11,8 @@ session = AgentSession(stt=..., llm=..., tts=bakbak.TTS(language="hi"))
 
 - **Fast.** One WebSocket per agent, opened before the first reply. Each sentence of
   the LLM's reply is sent the moment it is complete and the server queues them, so
-  the first audio arrives in about 22 ms (measured, below) and there is no gap between
-  sentences.
+  the first audio arrives in about 22 ms (measured close to the server, below) and there
+  is no gap between sentences.
 - **Built for Indian text.** The Bakbak sentence segmenter knows the danda (`।`, `॥`),
   never splits inside numbers, URLs, initials or titles like "Dr." and "डॉ.", and keeps
   Indic conjuncts whole.
@@ -206,16 +206,17 @@ the default.
 ### Measured
 
 Time from `push_text()` to the first audio frame, through the full public path, with a
-warm connection. Measured 2026-11-21 against a staging deployment, from a client close
-to it, model m1, N = 15 each:
+warm connection. Measured 2026-11-21 against a staging deployment, from a client in the
+same region, model m1, N = 15 each:
 
 | Transport | p50 | p90 |
 |---|---|---|
 | WebSocket | 22.2 ms | 24.4 ms |
 | HTTP | 30.7 ms | 32.3 ms |
 
-Your network distance to the API adds to both. The WebSocket also saves the per-request
-gateway work the HTTP path repeats.
+These are close-to-the-server numbers. From farther away both are higher (a tester on a
+laptop measured a p50 of 58 ms for the WebSocket and 158 ms for HTTP), but the WebSocket
+stays ahead. It also saves the per-request gateway work the HTTP path repeats.
 
 ### Latency tips
 
