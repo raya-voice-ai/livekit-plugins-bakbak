@@ -45,7 +45,7 @@ examples = ["livekit-agents[deepgram,openai]>=1.8.7,<2"]
 
 [project.urls]
 Homepage = "https://getraya.app/"
-Documentation = "https://docs.litwizlabs.com/documentation/tts-livekit"
+Documentation = "https://docs.bakbak.si/integrations/livekit"
 Source = "https://github.com/raya-voice-ai/livekit-plugins-bakbak"
 Changelog = "https://github.com/raya-voice-ai/livekit-plugins-bakbak/blob/main/CHANGELOG.md"
 Issues = "https://github.com/raya-voice-ai/livekit-plugins-bakbak/issues"

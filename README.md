@@ -169,7 +169,7 @@ English voices use `en`, not `en-in`.
 ### `transport="websocket"` (default)
 
 One WebSocket per `TTS` instance carries every utterance (the protocol is in the
-[WebSocket API reference](https://docs.litwizlabs.com/api-reference/tts-websocket)):
+[WebSocket API reference](https://docs.bakbak.si/text-to-speech/websocket)):
 
 - `prewarm()` opens it. `AgentSession` calls this when the agent starts, so the first
   reply pays no handshake. Without it, the first utterance opens the socket.
@@ -279,7 +279,7 @@ unchanged:
 
 The message is the API's own sentence, naming the field when a request is invalid
 ("The request is malformed or invalid. voice_id: Field required"). Every
-`error_code` is described in the [errors reference](https://docs.litwizlabs.com/documentation/tts-errors).
+`error_code` is described in the [errors reference](https://docs.bakbak.si/text-to-speech/errors).
 A redirect is never followed (it would take your key to another address): a 3xx is
 raised as an `APIStatusError` with that status.
 
@@ -361,9 +361,9 @@ points follow LiveKit's conventions instead:
 
 ## Links
 
-- [This plugin's documentation](https://docs.litwizlabs.com/documentation/tts-livekit)
-- [WebSocket API reference](https://docs.litwizlabs.com/api-reference/tts-websocket)
-- [Errors](https://docs.litwizlabs.com/documentation/tts-errors)
+- [This plugin's documentation](https://docs.bakbak.si/integrations/livekit)
+- [WebSocket API reference](https://docs.bakbak.si/text-to-speech/websocket)
+- [Errors](https://docs.bakbak.si/text-to-speech/errors)
 - [LiveKit Agents documentation](https://docs.livekit.io/agents/)
 - [Changelog](https://github.com/raya-voice-ai/livekit-plugins-bakbak/blob/main/CHANGELOG.md) ·
   [Contributing](https://github.com/raya-voice-ai/livekit-plugins-bakbak/blob/main/CONTRIBUTING.md) ·
