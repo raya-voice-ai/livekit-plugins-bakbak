@@ -98,7 +98,7 @@ full [voice agent](examples/agent.py) (`pip install "livekit-plugins-bakbak[exam
 | `voice_id` | `009ae8b5-4a03-492d-af1c-3055989ac734` (Anika M1, Hindi) | A voice belongs to one model; see [Voices](#voices). |
 | `language` | `"hi"` | The language of the text. Codes, BCP-47 tags and names all work: see [Languages](#languages). |
 | `model` | `"m1"` | `"m1"` or `"standard"`; must match the voice's model. |
-| `speed` | not sent (the server uses 1.0) | Speaking rate, 0.5 to 1.5. |
+| `speed` | not sent (the server uses 1.0) | Speaking rate, 0.5 to 1.5. Changes standard voices only: m1 voices accept it and keep their own pace. |
 | `sample_rate` | `24000` | `8000`, `16000`, `22050` or `24000` Hz. Audio is 16-bit mono PCM at this rate. |
 | `base_url` | `BAKBAK_BASE_URL`, else `https://hub.getraya.app` | The API's address. |
 | `transport` | `"websocket"` | `"websocket"` or `"http"`; see [Transports](#transports-and-latency). |
@@ -109,10 +109,12 @@ full [voice agent](examples/agent.py) (`pip install "livekit-plugins-bakbak[exam
 
 Environment variables are read when the `TTS` is created, never at import.
 
-Change the voice settings at any time; they apply from the next utterance:
+Change the voice settings at any time; they apply from the next utterance. Here, a
+standard Marathi voice, a little faster (`speed` has no effect on m1 voices):
 
 ```python
-tts.update_options(voice_id="...", language="mr", model="m1", speed=1.1)
+voice = (await tts.list_voices(model="standard", language="mr"))[0]
+tts.update_options(voice_id=voice.id, language="mr", model="standard", speed=1.1)
 ```
 
 `tts.model` and `tts.provider` (`"Bakbak"`) label LiveKit's metrics.

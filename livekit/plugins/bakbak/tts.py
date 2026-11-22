@@ -141,6 +141,7 @@ class TTS(tts.TTS):  # pyright: ignore[reportMissingTypeArgument]  # no events o
                 stay distinct; the m1 English voices use ``"en"``.
             model: ``"m1"`` (default) or ``"standard"``; it must match the voice's model.
             speed: Speaking rate, 0.5 to 1.5. The server's default, 1.0, when not given.
+                Changes standard voices only; m1 voices accept it and keep their own pace.
             sample_rate: 8000, 16000, 22050 or 24000 Hz (default). Audio is 16-bit mono PCM.
             base_url: The API's base URL. Defaults to ``BAKBAK_BASE_URL``, then the
                 production API.
@@ -239,7 +240,11 @@ class TTS(tts.TTS):  # pyright: ignore[reportMissingTypeArgument]  # no events o
         model: NotGivenOr[TTSModels | str] = NOT_GIVEN,
         speed: NotGivenOr[float] = NOT_GIVEN,
     ) -> None:
-        """Change the voice settings. They apply from the next ``synthesize()``/``stream()``."""
+        """Change the voice settings. They apply from the next ``synthesize()``/``stream()``.
+
+        ``speed`` (0.5 to 1.5) changes standard voices only; m1 voices accept it and keep
+        their own pace.
+        """
         if is_given(voice_id):
             self._opts.voice_id = voice_id
         if is_given(language):
