@@ -31,6 +31,9 @@ from livekit.agents import APIConnectionError, APIError, APIStatusError
 
 _RETRYABLE_STATUSES = frozenset({408, 429, 500, 502, 503, 504})
 _DRAINING_PHRASE = "Reconnect and send the request again"
+# pydantic wraps a validator's ValueError as "Value error, <text>". The server's
+# own `message` quotes the text without it, so it is dropped before comparing.
+_PYDANTIC_VALUE_ERROR = "Value error, "
 
 
 def error_message(body: object, status: int | None, reason: str | None = None) -> str:
@@ -73,6 +76,8 @@ def _render_detail(entry: object) -> str:
         return str(entry) if entry else ""
     fields: Mapping[str, Any] = entry
     msg = fields.get("msg")
+    if isinstance(msg, str) and msg.startswith(_PYDANTIC_VALUE_ERROR):
+        msg = msg[len(_PYDANTIC_VALUE_ERROR) :]
     if not isinstance(msg, str) or not msg:
         return ""
     loc = fields.get("loc")
