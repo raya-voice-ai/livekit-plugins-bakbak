@@ -79,8 +79,10 @@ Releases are automated with [release-please](https://github.com/googleapis/relea
 2. Merging that pull request tags the commit and publishes a GitHub release.
    Until 1.0.0 these are release candidates (`1.0.0rc2`, `1.0.0rc3`, …) and are
    marked as pre-releases.
-3. The release triggers `publish.yml`, which builds the package and uploads it to
-   PyPI through trusted publishing, with attestations. No API token is stored.
+3. The release triggers `publish.yml` on its tag. It refuses a tag that is not on
+   `main`, builds the package, waits for a maintainer to approve the `pypi`
+   environment, and uploads it to PyPI through trusted publishing, with
+   attestations. No API token is stored.
 
 To release 1.0.0 itself, add `Release-As: 1.0.0` to the footer of a commit on
 `main`, and switch `prerelease`/`versioning` off in `release-please-config.json`.

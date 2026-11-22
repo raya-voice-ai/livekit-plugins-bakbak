@@ -18,6 +18,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # Releases come only from main: refuse a v* tag on a commit main does not contain.
+      - name: The tag is on main
+        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/main || { echo "::error::$GITHUB_REF_NAME is not on main"; exit 1; }
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.12"
@@ -35,6 +40,7 @@ jobs:
   pypi:
     needs: build
     runs-on: ubuntu-latest
+    # The pypi environment waits for the maintainer's approval and only accepts v* tags.
     environment:
       name: pypi
       url: https://pypi.org/p/livekit-plugins-bakbak
