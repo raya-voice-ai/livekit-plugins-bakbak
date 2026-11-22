@@ -19,7 +19,24 @@ DETAIL = [
     {"type": "missing", "loc": ["body", "voice_id"], "msg": "Field required"},
     {"loc": ["body", "output_format", "encoding"], "msg": "Value error, bad"},
 ]
-RENDERED = "voice_id: Field required; output_format.encoding: Value error, bad"
+RENDERED = "voice_id: Field required; output_format.encoding: bad"
+# A real production 422: the message already quotes the validator's text, without
+# the "Value error, " that pydantic puts in front of it in `detail`.
+SPEED_422 = {
+    "detail": [
+        {
+            "type": "value_error",
+            "loc": ["body", "speed"],
+            "msg": "Value error, speed must be between 0.5 and 1.5 (inclusive)",
+            "input": 3,
+            "ctx": {"error": {}},
+        }
+    ],
+    "error_code": "invalid_request",
+    "message": "Invalid request: speed: speed must be between 0.5 and 1.5 (inclusive).",
+    "retryable": False,
+    "request_id": "req_speed",
+}
 
 
 @pytest.mark.parametrize(
@@ -34,6 +51,12 @@ RENDERED = "voice_id: Field required; output_format.encoding: Value error, bad"
         ({"detail": DETAIL}, 422, None, RENDERED),
         ({"detail": ["plain entry", {"msg": "no loc"}, {"loc": ["body"], "msg": "only body"}, {}]},
          422, None, "plain entry; no loc; only body"),
+        (SPEED_422, 422, None,
+         "Invalid request: speed: speed must be between 0.5 and 1.5 (inclusive)."),
+        ({"detail": [{"loc": ["body", "a"], "msg": "Value error, x. Value error, y"}]},
+         422, None, "a: x. Value error, y"),
+        ({"detail": [{"msg": "Value error, no loc"}]}, 422, None, "no loc"),
+        ({"message": "Shown", "detail": [{"msg": "Value error, "}]}, 422, None, "Shown"),
         ({"error": "Insufficient credits"}, 402, None, "Insufficient credits"),
         ({}, 401, "Unauthorized", "Unauthorized"),
         ("<html>bad gateway</html>", 502, None, "Bad Gateway"),

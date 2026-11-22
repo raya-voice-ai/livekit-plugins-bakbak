@@ -4,6 +4,7 @@ Bakbak text-to-speech for [LiveKit Agents](https://docs.livekit.io/agents/): nat
 low-latency speech for Indian languages, from [Raya](https://getraya.app).
 
 ```python
+from livekit.agents import AgentSession
 from livekit.plugins import bakbak
 
 session = AgentSession(stt=..., llm=..., tts=bakbak.TTS(language="hi"))
@@ -11,8 +12,8 @@ session = AgentSession(stt=..., llm=..., tts=bakbak.TTS(language="hi"))
 
 - **Fast.** One WebSocket per agent, opened before the first reply. Each sentence of
   the LLM's reply is sent the moment it is complete and the server queues them, so
-  the first audio arrives in about 22 ms (measured, below) and there is no gap between
-  sentences.
+  the first audio arrives in about 22 ms (measured close to the server, below) and there
+  is no gap between sentences.
 - **Built for Indian text.** The Bakbak sentence segmenter knows the danda (`।`, `॥`),
   never splits inside numbers, URLs, initials or titles like "Dr." and "डॉ.", and keeps
   Indic conjuncts whole.
@@ -22,7 +23,8 @@ session = AgentSession(stt=..., llm=..., tts=bakbak.TTS(language="hi"))
   retried.
 
 Hindi, Marathi, Telugu, Kannada, Bengali, Assamese, Gujarati, Nepali, Malayalam,
-Tamil, Punjabi and English (Indian and US), code-mixed text included.
+Tamil and English (Indian and US), code-mixed text included; see
+[Languages and models](#languages-and-models).
 
 ## Install
 
@@ -85,8 +87,10 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
-[`examples/`](examples/) has a runnable [WAV script](examples/synthesize_to_wav.py) and a
-full [voice agent](examples/agent.py) (`pip install "livekit-plugins-bakbak[examples]"`).
+[`examples/`](https://github.com/raya-voice-ai/livekit-plugins-bakbak/tree/main/examples) has a runnable
+[WAV script](https://github.com/raya-voice-ai/livekit-plugins-bakbak/blob/main/examples/synthesize_to_wav.py)
+and a full [voice agent](https://github.com/raya-voice-ai/livekit-plugins-bakbak/blob/main/examples/agent.py)
+(`pip install "livekit-plugins-bakbak[examples]"`).
 
 ## Configuration
 
@@ -96,9 +100,9 @@ full [voice agent](examples/agent.py) (`pip install "livekit-plugins-bakbak[exam
 |---|---|---|
 | `api_key` | `BAKBAK_API_KEY` | Your API key. |
 | `voice_id` | `009ae8b5-4a03-492d-af1c-3055989ac734` (Anika M1, Hindi) | A voice belongs to one model; see [Voices](#voices). |
-| `language` | `"hi"` | The language of the text. Codes, BCP-47 tags and names all work: see [Languages](#languages). |
+| `language` | `"hi"` | The language of the text. Codes, BCP-47 tags and names all work: see [Languages and models](#languages-and-models). |
 | `model` | `"m1"` | `"m1"` or `"standard"`; must match the voice's model. |
-| `speed` | not sent (the server uses 1.0) | Speaking rate, 0.5 to 1.5. |
+| `speed` | not sent (the server uses 1.0) | Speaking rate, 0.5 to 1.5. Changes standard voices only: m1 voices accept it and keep their own pace. |
 | `sample_rate` | `24000` | `8000`, `16000`, `22050` or `24000` Hz. Audio is 16-bit mono PCM at this rate. |
 | `base_url` | `BAKBAK_BASE_URL`, else `https://hub.getraya.app` | The API's address. |
 | `transport` | `"websocket"` | `"websocket"` or `"http"`; see [Transports](#transports-and-latency). |
@@ -109,10 +113,12 @@ full [voice agent](examples/agent.py) (`pip install "livekit-plugins-bakbak[exam
 
 Environment variables are read when the `TTS` is created, never at import.
 
-Change the voice settings at any time; they apply from the next utterance:
+Change the voice settings at any time; they apply from the next utterance. Here, a
+standard Marathi voice, a little faster (`speed` has no effect on m1 voices):
 
 ```python
-tts.update_options(voice_id="...", language="mr", model="m1", speed=1.1)
+voice = (await tts.list_voices(model="standard", language="mr"))[0]
+tts.update_options(voice_id=voice.id, language="mr", model="standard", speed=1.1)
 ```
 
 `tts.model` and `tts.provider` (`"Bakbak"`) label LiveKit's metrics.
@@ -127,7 +133,17 @@ for voice in await tts.list_voices(model="m1", language="hi"):
 `list_voices()` returns every voice. `model` and `language` filter the list on your side.
 A voice works only with its own model: an m1 voice with `model="standard"` is refused.
 
-## Languages
+## Languages and models
+
+The languages that have voices, from `GET /v1/voices` on 2026-11-22:
+
+| Model | Languages |
+|---|---|
+| `m1` | `hi` `en` `kn` |
+| `standard` | `hi` `en-in` `en-us` `as` `bn` `gu` `kn` `ml` `mr` `ne` `ta` `te` |
+
+`pa` (Punjabi) is accepted by the API but has no voice yet. Voices are added over time,
+so `list_voices()` is the source of truth.
 
 Known codes: `hi` `mr` `te` `kn` `bn` `as` `gu` `ne` `ml` `ta` `pa` `en` `en-in` `en-us`.
 Other strings are passed through, so a language added on the server works without a new
@@ -191,16 +207,17 @@ the default.
 ### Measured
 
 Time from `push_text()` to the first audio frame, through the full public path, with a
-warm connection. Measured 2026-11-21 against a staging deployment, from a client close
-to it, model m1, N = 15 each:
+warm connection. Measured 2026-11-21 against a staging deployment, from a client in the
+same region, model m1, N = 15 each:
 
 | Transport | p50 | p90 |
 |---|---|---|
 | WebSocket | 22.2 ms | 24.4 ms |
 | HTTP | 30.7 ms | 32.3 ms |
 
-Your network distance to the API adds to both. The WebSocket also saves the per-request
-gateway work the HTTP path repeats.
+These are close-to-the-server numbers. From farther away both are higher (a tester on a
+laptop measured a p50 of 58 ms for the WebSocket and 158 ms for HTTP), but the WebSocket
+stays ahead. It also saves the per-request gateway work the HTTP path repeats.
 
 ### Latency tips
 
@@ -224,12 +241,16 @@ space or a newline. It does not split:
 - after list markers at the start of a line (`1.`);
 - after abbreviations such as `etc.` or `no.` unless a capital letter follows.
 
-Short sentences are merged so that every request has something to say. Text with
-nothing speakable (only punctuation or an emoji) is not sent. Streaming gives exactly
-the sentences that splitting the whole text gives, and each one is released as soon as
-its end is certain.
+Sentences shorter than `min_chars` (default 20 characters) are joined with the next, so
+that every request has something to say: `"आपका ऑर्डर आज पहुँच जाएगा। हाँ। ठीक है। धन्यवाद।"`
+is two requests, not four. Only the first sentence goes out as soon as it ends, however
+short (`first_min_chars=1`). Text with nothing speakable (only punctuation or an emoji)
+is not sent. Streaming gives exactly the sentences that splitting the whole text gives,
+and each one is released as soon as its end is certain.
 
 ```python
+from livekit.plugins import bakbak
+
 tts = bakbak.TTS(
     tokenizer=bakbak.SentenceTokenizer(
         min_chars=20,  # shorter sentences are merged with the next one
@@ -344,8 +365,10 @@ points follow LiveKit's conventions instead:
 - [WebSocket API reference](https://docs.litwizlabs.com/api-reference/tts-websocket)
 - [Errors](https://docs.litwizlabs.com/documentation/tts-errors)
 - [LiveKit Agents documentation](https://docs.livekit.io/agents/)
-- [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
+- [Changelog](https://github.com/raya-voice-ai/livekit-plugins-bakbak/blob/main/CHANGELOG.md) ·
+  [Contributing](https://github.com/raya-voice-ai/livekit-plugins-bakbak/blob/main/CONTRIBUTING.md) ·
+  [Security](https://github.com/raya-voice-ai/livekit-plugins-bakbak/blob/main/SECURITY.md)
 
 ## License
 
-Apache-2.0. See [LICENSE](LICENSE).
+Apache-2.0. See [LICENSE](https://github.com/raya-voice-ai/livekit-plugins-bakbak/blob/main/LICENSE).

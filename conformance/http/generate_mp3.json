@@ -1,0 +1,59 @@
+{
+ "id": "generate_mp3",
+ "description": "mp3: encoding is mp3 and sample_rate is unset even though one was requested; the rate is in the MP3 frames.",
+ "call": {
+  "method": "generate",
+  "params": {
+   "text": "नमस्ते, आप कैसे हैं?",
+   "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+   "model": "m1",
+   "language": "hi",
+   "output_format": {
+    "container": "mp3",
+    "sample_rate": 24000
+   }
+  }
+ },
+ "exchanges": [
+  {
+   "expect_request": {
+    "method": "POST",
+    "path": "/v1/text-to-speech",
+    "headers": {
+     "x-api-key": "test-key",
+     "content-type": "application/json"
+    },
+    "json": {
+     "text": "नमस्ते, आप कैसे हैं?",
+     "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+     "model": "m1",
+     "language": "hi",
+     "output_format": {
+      "container": "mp3",
+      "sample_rate": 24000
+     }
+    }
+   },
+   "response": {
+    "status": 200,
+    "headers": {
+     "content-type": "audio/mpeg",
+     "x-request-id": "req_mp3",
+     "x-audio-format": "mp3"
+    },
+    "body_base64": "//uQZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+   }
+  }
+ ],
+ "expect": {
+  "result": {
+   "audio_bytes": 416,
+   "audio_sha256": "82d53f53fc55ee444db291b576ebf5c85524b45f15c5cf677ceb08a2e4e12159",
+   "content_type": "audio/mpeg",
+   "request_id": "req_mp3",
+   "encoding": "mp3",
+   "sample_rate": null
+  },
+  "sleeps": []
+ }
+}

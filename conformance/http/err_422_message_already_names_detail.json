@@ -1,0 +1,81 @@
+{
+ "id": "err_422_message_already_names_detail",
+ "description": "A message that already contains the rendered detail list (after dropping pydantic's \"Value error, \" prefix) is used as it is.",
+ "call": {
+  "method": "generate",
+  "params": {
+   "text": "नमस्ते, आप कैसे हैं?",
+   "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+   "model": "m1",
+   "language": "hi",
+   "output_format": {
+    "container": "raw",
+    "encoding": "pcm_mulaw",
+    "sample_rate": 8000
+   },
+   "speed": 3
+  }
+ },
+ "exchanges": [
+  {
+   "expect_request": {
+    "method": "POST",
+    "path": "/v1/text-to-speech",
+    "headers": {
+     "x-api-key": "test-key",
+     "content-type": "application/json"
+    },
+    "json": {
+     "text": "नमस्ते, आप कैसे हैं?",
+     "voice_id": "009ae8b5-4a03-492d-af1c-3055989ac734",
+     "model": "m1",
+     "language": "hi",
+     "output_format": {
+      "container": "raw",
+      "encoding": "pcm_mulaw",
+      "sample_rate": 8000
+     },
+     "speed": 3
+    }
+   },
+   "response": {
+    "status": 422,
+    "headers": {
+     "content-type": "application/json",
+     "x-request-id": "req_speed"
+    },
+    "json": {
+     "detail": [
+      {
+       "type": "value_error",
+       "loc": [
+        "body",
+        "speed"
+       ],
+       "msg": "Value error, speed must be between 0.5 and 1.5 (inclusive)",
+       "input": 3,
+       "ctx": {
+        "error": {}
+       }
+      }
+     ],
+     "error_code": "invalid_request",
+     "message": "Invalid request: speed: speed must be between 0.5 and 1.5 (inclusive).",
+     "retryable": false,
+     "request_id": "req_speed"
+    }
+   }
+  }
+ ],
+ "expect": {
+  "error": {
+   "class": "UnprocessableEntityError",
+   "status": 422,
+   "error_code": "invalid_request",
+   "retryable": false,
+   "request_id": "req_speed",
+   "message": "Invalid request: speed: speed must be between 0.5 and 1.5 (inclusive)."
+  },
+  "sleeps": []
+ }
+}
