@@ -4,6 +4,7 @@ Bakbak text-to-speech for [LiveKit Agents](https://docs.livekit.io/agents/): nat
 low-latency speech for Indian languages, from [Raya](https://getraya.app).
 
 ```python
+from livekit.agents import AgentSession
 from livekit.plugins import bakbak
 
 session = AgentSession(stt=..., llm=..., tts=bakbak.TTS(language="hi"))
@@ -240,12 +241,16 @@ space or a newline. It does not split:
 - after list markers at the start of a line (`1.`);
 - after abbreviations such as `etc.` or `no.` unless a capital letter follows.
 
-Short sentences are merged so that every request has something to say. Text with
-nothing speakable (only punctuation or an emoji) is not sent. Streaming gives exactly
-the sentences that splitting the whole text gives, and each one is released as soon as
-its end is certain.
+Sentences shorter than `min_chars` (default 20 characters) are joined with the next, so
+that every request has something to say: `"आपका ऑर्डर आज पहुँच जाएगा। हाँ। ठीक है। धन्यवाद।"`
+is two requests, not four. Only the first sentence goes out as soon as it ends, however
+short (`first_min_chars=1`). Text with nothing speakable (only punctuation or an emoji)
+is not sent. Streaming gives exactly the sentences that splitting the whole text gives,
+and each one is released as soon as its end is certain.
 
 ```python
+from livekit.plugins import bakbak
+
 tts = bakbak.TTS(
     tokenizer=bakbak.SentenceTokenizer(
         min_chars=20,  # shorter sentences are merged with the next one
