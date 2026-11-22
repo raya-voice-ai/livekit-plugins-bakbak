@@ -203,7 +203,7 @@ reason phrase; `"HTTP <status>"`.
 Rendering a `detail` list: each entry becomes `<loc>: <msg>`, where `<loc>` is the
 entry's `loc` without a leading `"body"`, joined with `.`, and `<msg>` is the
 entry's `msg` without a leading `"Value error, "` (pydantic's wrapper, which the
-server's own `message` leaves out); an entry with no `loc` is just its `msg`; a
+server's own `message` leaves out); an entry with no `loc` is just its `<msg>`; a
 string entry is itself; an entry with no `msg`, and any empty rendering, is
 skipped. The entries are joined with `"; "`, e.g. `voice_id: Field required;
 output_format.encoding: encoding must be one of: …`.
@@ -301,10 +301,11 @@ so its read timeout runs from the request to the first byte, then between bytes.
 - `Audio` (whole file) and stream results expose the bytes, `request_id`,
   `content_type`, `encoding` and `sample_rate`. They come from `X-Audio-Format`
   and `X-Audio-Sample-Rate`. A whole file without those headers whose body is a
-  WAV file takes them from its `fmt ` chunk: format 1 at 16 bits is `pcm_s16le`,
-  3 at 32 bits `pcm_f32le`, 6 `pcm_alaw`, 7 `pcm_mulaw` (for format `0xFFFE`, the
-  first two bytes of the sub-format); the sizes in the header are not trusted
-  (a streamed WAV may give `0xFFFFFFFF`), and anything else leaves both unset.
+  WAV file takes them from its mono `fmt ` chunk: format 1 at 16 bits is
+  `pcm_s16le`, 3 at 32 bits `pcm_f32le`, 6 at 8 bits `pcm_alaw`, 7 at 8 bits
+  `pcm_mulaw` (for format `0xFFFE`, the first two bytes of the sub-format); the
+  sizes in the header are not trusted (a streamed WAV may give `0xFFFFFFFF`),
+  and anything else leaves both unset.
   For mp3, `encoding` is `mp3` and `sample_rate` is unset: the rate is in the MP3
   frames, and the client must not guess it from the request.
 - `save(path)` writes exactly the bytes received.
@@ -312,9 +313,15 @@ so its read timeout runs from the request to the first byte, then between bytes.
   header: the canonical 44-byte PCM header for `pcm_s16le`; for `pcm_f32le`
   (format 3), `pcm_alaw` (6) and `pcm_mulaw` (7) an 18-byte `fmt ` chunk
   (`cbSize` 0) plus a 4-byte `fact` chunk, 58 bytes in all. Mono; byte rate and
-  block align from the encoding's sample size. For mp3 it fails saying that MP3
-  cannot be wrapped in WAV and must be decoded with an audio library; for raw
-  audio whose encoding or rate is unknown it fails saying so.
+  block align from the encoding's sample size. An odd-sized `data` chunk is
+  followed by one pad byte, which the RIFF size counts and the `data` size does
+  not. For mp3 it fails saying that MP3 cannot be wrapped in WAV and must be
+  decoded with an audio library; for raw audio whose length is not a whole
+  number of samples (an odd length for 16 bits, not a multiple of 4 for 32) it
+  fails saying so rather than write a header that disagrees with the data; for
+  raw audio whose encoding or rate is unknown (a stream sent without
+  `output_format`) it fails saying so, and that sending `output_format` makes
+  the response state them.
 - Samples never straddle a chunk boundary in what the client hands out: if a chunk
   ends mid-sample (f32 or s16), carry the remainder into the next chunk.
 - No playback helpers in the core packages.
@@ -333,6 +340,14 @@ so its read timeout runs from the request to the first byte, then between bytes.
   handshake. Otherwise the first `send` opens it.
 - A refused upgrade raises the §3 error for its status and body (401 →
   `AuthenticationError`).
+  Where the WebSocket hides why the handshake failed (the WHATWG `WebSocket` of
+  browsers, Deno, Bun, Workers and Node's global), the client sends one plain
+  `GET` to the same URL with the key placed the same way, timed by the connect
+  timeout: an error status other than 426 raises the §3 error for that status
+  and body (so a wrong key is an `AuthenticationError`, not retryable). A 426
+  (the endpoint's answer to a request that is not an upgrade, so the key and URL
+  are good) or no answer at all leaves the handshake failure an
+  `APIConnectionError`, retried as usual.
 - The client must always be reading: one reader task routes every message to its
   context. That also answers the server's pings, which libraries only do while
   reading. Per-message compression is off.
@@ -354,8 +369,15 @@ so its read timeout runs from the request to the first byte, then between bytes.
   (LLM tokens), runs them through the sentence segmenter (§7), and sends each
   sentence as soon as it is final, then calls `end_input()` unless told not to.
   It accepts `str` pieces and objects with a text delta (OpenAI-, Anthropic- and
-  Gemini-style stream events), found by duck typing and without importing those
-  libraries.
+  Gemini-style stream events, and Gemini's raw REST/SSE JSON, whose text is
+  `candidates[0].content.parts[*].text` joined, skipping parts marked `thought`),
+  found by duck typing and without importing those libraries. If the input ends
+  after at least one item, with no text from any item, and at least one item
+  matched none of these shapes, `send_stream` ends input as it otherwise would
+  and then fails, naming the shapes it reads, instead of returning having sent
+  nothing. An absent item (`None`, `null`, `undefined`) is a known item without
+  text, not an unknown shape: code that maps events to text yields one for each
+  event without text, and a reply that only calls tools is all absent items.
 - Back-pressure: with 64 unfinished requests on the connection, or a 17th
   context starting while 16 have unfinished requests, `send` waits; it never
   overruns the server's limits. For more parallelism, open more WebSockets.
